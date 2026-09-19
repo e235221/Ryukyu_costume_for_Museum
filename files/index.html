@@ -1,0 +1,837 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>琉球衣装AR体験</title>
+
+  <!-- A-Frame -->
+  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
+  <!-- MindAR Face Tracking -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-aframe.prod.js"></script>
+  <script src="costume-fit.js"></script>
+
+  <style>
+    :root {
+      --primary: #8B1A1A;
+      --primary-light: #C44D4D;
+      --gold: #C8A951;
+      --dark: #1a1a1a;
+      --text: #f0e6d3;
+      --panel-bg: rgba(26, 26, 26, 0.94);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
+      background: var(--dark);
+      color: var(--text);
+      overflow-x: hidden;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    /* ===== LANDING PAGE ===== */
+    #landing {
+      min-height: 100dvh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1.5rem;
+      text-align: center;
+      background:
+        radial-gradient(ellipse at 30% 20%, rgba(139,26,26,0.25) 0%, transparent 60%),
+        radial-gradient(ellipse at 70% 80%, rgba(200,169,81,0.15) 0%, transparent 50%),
+        var(--dark);
+    }
+
+    #landing h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(135deg, var(--gold), #e8d9a0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    #landing .subtitle {
+      font-size: 0.85rem;
+      color: rgba(240,230,211,0.6);
+      margin-bottom: 2rem;
+      letter-spacing: 0.08em;
+    }
+
+    .landing-desc {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      max-width: 360px;
+      margin-bottom: 2.5rem;
+      color: rgba(240,230,211,0.85);
+    }
+
+    .start-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem 2.5rem;
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #fff;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border: 2px solid var(--gold);
+      border-radius: 60px;
+      cursor: pointer;
+      letter-spacing: 0.1em;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    .start-btn:active {
+      transform: scale(0.96);
+    }
+
+    .start-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .notice {
+      margin-top: 1.5rem;
+      font-size: 0.75rem;
+      color: rgba(240,230,211,0.4);
+      max-width: 300px;
+    }
+
+    /* ===== AR SCENE ===== */
+    #ar-container {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      overflow: hidden;
+      isolation: isolate;
+      background: #000;
+    }
+
+    #ar-container.active {
+      display: block;
+    }
+
+    a-scene {
+      position: absolute;
+      z-index: 1;
+      width: 100%;
+      height: 100%;
+    }
+
+    #ar-container > video { z-index: 0 !important; }
+    #arStatus { position: absolute; top: 70px; left: 1rem; right: 1rem; z-index: 110; text-align: center; pointer-events: none; }
+    #backBtn { z-index: 310; }
+
+    /* ===== COSTUME SWITCHER ===== */
+    .costume-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      padding: 1rem 0.75rem;
+      padding-bottom: max(1rem, env(safe-area-inset-bottom));
+      background: linear-gradient(to top, rgba(0,0,0,0.85) 60%, transparent);
+    }
+
+    .costume-btn {
+      flex: 1;
+      max-width: 130px;
+      padding: 0.65rem 0.5rem;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.1);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.25s;
+      text-align: center;
+      letter-spacing: 0.05em;
+    }
+
+    .costume-btn.active {
+      color: #fff;
+      background: var(--primary);
+      border-color: var(--gold);
+      box-shadow: 0 0 12px rgba(139,26,26,0.5);
+    }
+
+    .costume-btn .icon {
+      display: block;
+      font-size: 1.3rem;
+      margin-bottom: 0.2rem;
+    }
+
+    /* ===== INFO BUTTON ===== */
+    .info-btn {
+      position: fixed;
+      top: max(1rem, env(safe-area-inset-top));
+      right: 1rem;
+      z-index: 100;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      color: white;
+      font-size: 1.2rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .back-btn {
+      position: fixed;
+      top: max(1rem, env(safe-area-inset-top));
+      left: 1rem;
+      z-index: 100;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,0.5);
+      backdrop-filter: blur(8px);
+      border: 1.5px solid rgba(255,255,255,0.2);
+      border-radius: 50%;
+      color: white;
+      font-size: 1.1rem;
+      cursor: pointer;
+    }
+
+    /* ===== DESCRIPTION PANEL ===== */
+    .desc-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      display: none;
+      flex-direction: column;
+      background: var(--panel-bg);
+      backdrop-filter: blur(16px);
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .desc-overlay.open {
+      display: flex;
+    }
+
+    .desc-header {
+      position: sticky;
+      top: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.2rem;
+      padding-top: max(1rem, env(safe-area-inset-top));
+      background: rgba(26,26,26,0.95);
+      border-bottom: 1px solid rgba(200,169,81,0.2);
+      z-index: 1;
+    }
+
+    .desc-header h2 {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.08em;
+    }
+
+    .close-btn {
+      width: 36px;
+      height: 36px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 50%;
+      color: white;
+      font-size: 1.2rem;
+      cursor: pointer;
+    }
+
+    .desc-body {
+      padding: 1.5rem 1.2rem;
+      padding-bottom: max(2rem, env(safe-area-inset-bottom));
+    }
+
+    .desc-section {
+      margin-bottom: 1.5rem;
+    }
+
+    .desc-section h3 {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--gold);
+      margin-bottom: 0.5rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    .desc-section p {
+      font-size: 0.95rem;
+      line-height: 1.8;
+      color: rgba(240,230,211,0.9);
+    }
+
+    .compare-box {
+      margin-top: 0.8rem;
+      padding: 1rem;
+      background: rgba(200,169,81,0.08);
+      border-left: 3px solid var(--gold);
+      border-radius: 0 8px 8px 0;
+    }
+
+    .compare-box p {
+      font-size: 0.88rem;
+      line-height: 1.7;
+    }
+
+    /* ===== LOADING ===== */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: var(--dark);
+    }
+
+    .loading-overlay.hidden { display: none; }
+
+    .loading-spinner {
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(200,169,81,0.2);
+      border-top-color: var(--gold);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .loading-text {
+      margin-top: 1.2rem;
+      font-size: 0.9rem;
+      color: rgba(240,230,211,0.6);
+      letter-spacing: 0.05em;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ===== FACE GUIDE ===== */
+    .face-guide {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -60%);
+      z-index: 90;
+      width: 160px;
+      height: 200px;
+      border: 2px dashed rgba(255,255,255,0.35);
+      border-radius: 50%;
+      pointer-events: none;
+      transition: opacity 0.5s;
+    }
+
+    .face-guide-text {
+      position: fixed;
+      top: calc(50% + 80px);
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 90;
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.5);
+      white-space: nowrap;
+      pointer-events: none;
+    }
+
+    .face-guide.hidden,
+    .face-guide-text.hidden {
+      opacity: 0;
+    }
+
+    /* ===== CALIBRATION CONTROLS (prototype debug) ===== */
+    .calibration {
+      position: fixed;
+      top: max(4rem, calc(env(safe-area-inset-top) + 3.5rem));
+      left: 0.5rem;
+      z-index: 150;
+      background: rgba(0,0,0,0.6);
+      padding: 0.5rem;
+      border-radius: 8px;
+      font-size: 0.65rem;
+      color: white;
+      display: none;
+    }
+
+    .calibration.show { display: block; }
+
+    .calibration label {
+      display: block;
+      margin: 0.2rem 0;
+    }
+
+    .calibration input[type="range"] {
+      width: 100px;
+      vertical-align: middle;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ===== LANDING PAGE ===== -->
+  <div id="landing">
+    <h1>琉球衣装AR体験</h1>
+    <p class="subtitle">Ryukyu Costume AR Experience</p>
+    <p class="landing-desc">
+      琉球王国時代の衣装をARで体験できるアプリである。
+      カメラに顔を映すと、男性・女性の琉球衣装を着た姿を楽しめる。
+      衣装の生地や時代背景の解説も確認できる。
+    </p>
+    <button class="start-btn" id="startBtn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
+        <circle cx="12" cy="13" r="4"/>
+      </svg>
+      AR体験を始める
+    </button>
+    <p class="notice">
+      ※ カメラへのアクセス許可が必要である。<br>
+      ※ スマートフォンの縦向きでの利用を推奨する。
+    </p>
+  </div>
+
+  <!-- ===== AR CONTAINER ===== -->
+  <div id="ar-container">
+
+    <!-- Loading -->
+    <div class="loading-overlay" id="loadingOverlay">
+      <div class="loading-spinner"></div>
+      <p class="loading-text">カメラを起動中...</p>
+    </div>
+
+    <!-- Face guide -->
+    <p id="arStatus" role="status" aria-live="polite"></p>
+    <div class="face-guide" id="faceGuide"></div>
+    <p class="face-guide-text" id="faceGuideText">顔をこの枠に合わせてください</p>
+
+    <!-- A-Frame AR Scene -->
+    <a-scene
+      id="arScene"
+      mindar-face="autoStart: false; faceOccluder: false; uiLoading: no; uiScanning: no; uiError: no"
+      embedded
+      color-space="sRGB"
+      renderer="colorManagement: true; sortObjects: true; alpha: true; antialias: false; maxCanvasWidth: 1280; maxCanvasHeight: 720"
+      vr-mode-ui="enabled: false"
+      device-orientation-permission-ui="enabled: false"
+      loading-screen="enabled: false"
+    >
+      <a-assets>
+        <img id="img-man" src="orion_man.png" crossorigin="anonymous">
+        <img id="img-woman" src="orion_woman.png" crossorigin="anonymous">
+      </a-assets>
+
+      <a-camera active="true" position="0 0 0" look-controls="enabled: false" wasd-controls="enabled: false"></a-camera>
+
+      <!-- Orion man costume overlay -->
+      <a-entity mindar-face-target="anchorIndex: 1">
+        <a-plane
+          id="costume-man"
+          costume-fit="kind: man"
+          src="#img-man"
+          width="1"
+          height="1"
+          material="shader: flat; color: #fff; transparent: true; alphaTest: 0.01; side: double; depthWrite: false; npot: true"
+          visible="true"
+        ></a-plane>
+      </a-entity>
+
+      <!-- Orion woman costume overlay -->
+      <a-entity mindar-face-target="anchorIndex: 1">
+        <a-plane
+          id="costume-woman"
+          costume-fit="kind: woman"
+          src="#img-woman"
+          width="1"
+          height="1"
+          material="shader: flat; color: #fff; transparent: true; alphaTest: 0.01; side: double; depthWrite: false; npot: true"
+          visible="false"
+        ></a-plane>
+      </a-entity>
+
+    </a-scene>
+
+    <!-- Back button -->
+    <button class="back-btn" id="backBtn">←</button>
+
+    <!-- Info button -->
+    <button class="info-btn" id="infoBtn">i</button>
+
+    <!-- Calibration controls (double-tap info btn to toggle) -->
+    <div class="calibration" id="calibration">
+      <strong>位置調整 (プロトタイプ)</strong>
+      <label>Y位置: <input type="range" id="calY" min="-3" max="0" step="0.05" value="-0.85"> <span id="calYVal">-0.85</span></label>
+      <label>Z位置: <input type="range" id="calZ" min="-1" max="1" step="0.05" value="-0.05"> <span id="calZVal">-0.05</span></label>
+      <label>幅: <input type="range" id="calW" min="0.5" max="3" step="0.05" value="1.2"> <span id="calWVal">1.2</span></label>
+      <label>高さ: <input type="range" id="calH" min="0.5" max="5" step="0.05" value="2.68"> <span id="calHVal">2.68</span></label>
+    </div>
+
+    <!-- Costume selector bar -->
+    <div class="costume-bar">
+      <button class="costume-btn active" data-costume="man">
+        <span class="icon">👑</span>
+        男性衣装
+      </button>
+      <button class="costume-btn" data-costume="woman">
+        <span class="icon">👸</span>
+        女性衣装
+      </button>
+    </div>
+  </div>
+
+  <!-- ===== DESCRIPTION PANEL ===== -->
+  <div class="desc-overlay" id="descPanel">
+    <div class="desc-header">
+      <h2 id="descTitle">衣装解説</h2>
+      <button class="close-btn" id="closeDesc">✕</button>
+    </div>
+    <div class="desc-body" id="descBody"></div>
+  </div>
+
+  <script>
+    // ===== COSTUME DATA =====
+    const costumeData = {
+      man: {
+        name: '琉球男性衣装（オリオン）',
+        icon: '👑',
+        sections: [
+          {
+            title: '衣装名称',
+            text: '御絵図（おえず）に描かれた琉球国王の礼装。朝貢貿易時の正装として着用された。外交儀礼の場で王の権威を示す役割を持っていた。'
+          },
+          {
+            title: '生地・素材',
+            text: '紅型（びんがた）染めの絹地を使用。金糸・銀糸による龍や鳳凰の刺繍が全面に施されている。紅型は琉球独自の染色技法であり、中国の型染めと日本の友禅染めの両方の影響を受けている。染料には琉球藍やフクギなど沖縄特有の植物が使われた。'
+          },
+          {
+            title: '冠（ハチマチ）',
+            text: '頭部に被る冠はハチマチ（鉢巻）と呼ばれる。黒い漆塗りの本体に金の簪（かんざし）を挿す形式で、簪の形状や素材が身分を示した。国王のハチマチには最も大きく華麗な金簪が用いられた。'
+          },
+          {
+            title: '時代背景',
+            text: '琉球王国（1429〜1879年）は中国と日本の間に位置し、東南アジアも含む中継貿易で繁栄した。衣装は中国の冊封体制下で与えられた官服の影響を受けつつ、琉球独自の文様や色彩感覚が加えられている。1609年の薩摩侵攻後も、中国への朝貢関係は維持され、礼装文化も継続した。'
+          },
+          {
+            title: '王族と庶民の比較',
+            text: '国王の衣装は絹に紅型染め・金糸刺繍という最高級素材で構成される。一方、庶民は芭蕉布や苧麻（ちょま）など植物繊維の衣服が中心で、色や文様にも厳格な制限があった。身分制度によって着用できる衣服は細かく定められており、衣装は社会的地位を可視化する手段であった。',
+            isCompare: true
+          }
+        ]
+      },
+      woman: {
+        name: '琉球女性衣装（オリオン）',
+        icon: '👸',
+        sections: [
+          {
+            title: '衣装名称',
+            text: '琉球王妃が儀式や公式行事で着用した礼装。鳳凰文様の上衣と花柄の袴（カカン）で構成される。王と対になる装いとして、宮廷の格式を表現した。'
+          },
+          {
+            title: '生地・素材',
+            text: '上衣は赤地の絹に鳳凰・雲・波の吉祥文様を金糸で施したもの。鳳凰は中国文化において皇后・王妃を象徴する霊鳥とされる。内側の袴は紫〜青系の絹地に花柄があしらわれ、階層的な色の重なりが格式の高さを示す。'
+          },
+          {
+            title: '髪型と装飾',
+            text: '髪は高く結い上げ、金やべっ甲のかんざし（ジーファー）を挿す。髪型と簪の形式は身分を示す重要な要素であった。王妃のかんざしは特に大型で精巧な細工が施されていた。頭部には金属製の冠も着用し、玉飾りが配された。'
+          },
+          {
+            title: '時代背景',
+            text: '琉球王国の宮廷では女性も儀礼上の重要な役割を担った。王妃の礼装は中国の后妃服制の影響を強く受けているが、配色や文様の配置に琉球独自の美意識が反映されている。特に赤と金の組み合わせは琉球の宮廷文化を代表する色彩である。'
+          },
+          {
+            title: '王族と庶民の比較',
+            text: '王妃の衣装には絹・金糸・鳳凰文様といった最上位の素材と意匠が集中している。庶民の女性は芭蕉布や木綿の簡素な衣服を着用し、染色にも制約があった。ただし庶民の衣服にも実用美があり、芭蕉布の涼しさや藍染めの耐久性は沖縄の気候に適応したものであった。',
+            isCompare: true
+          }
+        ]
+      }
+    };
+
+    // ===== STATE =====
+    let currentCostume = 'man';
+    let arStarted = false;
+    let session = 0;
+    let starting = false;
+    let cameraStream = null;
+    let arInitialized = false;
+    let startupTimer;
+
+    // ===== DOM ELEMENTS =====
+    const landing = document.getElementById('landing');
+    const arContainer = document.getElementById('ar-container');
+    const startBtn = document.getElementById('startBtn');
+    const backBtn = document.getElementById('backBtn');
+    const infoBtn = document.getElementById('infoBtn');
+    const descPanel = document.getElementById('descPanel');
+    const descTitle = document.getElementById('descTitle');
+    const descBody = document.getElementById('descBody');
+    const closeDesc = document.getElementById('closeDesc');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    const faceGuide = document.getElementById('faceGuide');
+    const faceGuideText = document.getElementById('faceGuideText');
+    const costumeBtns = document.querySelectorAll('.costume-btn');
+
+    // MindAR 1.2.5 adapter: manage camera lifetime and playback explicitly.
+    const scene = document.getElementById('arScene');
+    const loadingText = loadingOverlay.querySelector('.loading-text');
+    const status = document.getElementById('arStatus');
+
+    function stopAR() {
+      session++;
+      arStarted = false;
+      clearTimeout(startupTimer);
+      const system = scene.systems?.['mindar-face-system'];
+      system?.controller?.stopProcessVideo();
+      cameraStream?.getTracks().forEach(track => track.stop());
+      cameraStream = null;
+      if (system?.video) {
+        system.video.pause();
+        system.video.srcObject = null;
+        system.video.remove();
+      }
+      scene.pause?.();
+    }
+
+    function showFailure(error) {
+      console.error('AR startup failed:', error);
+      stopAR();
+      loadingOverlay.classList.add('hidden');
+      status.textContent = '起動できませんでした。' + error.message + ' 左上の矢印で戻って再試行してください。';
+    }
+
+    scene.addEventListener('arReady', () => {
+      if (!arStarted) return;
+      clearTimeout(startupTimer);
+      loadingOverlay.classList.add('hidden');
+      status.textContent = '';
+    });
+
+    scene.addEventListener('targetFound', () => {
+      faceGuide.classList.add('hidden');
+      faceGuideText.classList.add('hidden');
+    });
+    scene.addEventListener('targetLost', () => {
+      faceGuide.classList.remove('hidden');
+      faceGuideText.classList.remove('hidden');
+    });
+
+    // ===== START AR =====
+    startBtn.addEventListener('click', async () => {
+      if (starting || arStarted) return;
+      starting = true;
+      startBtn.disabled = true;
+      arStarted = true;
+      const attempt = ++session;
+      landing.style.display = 'none';
+      arContainer.classList.add('active');
+      loadingOverlay.classList.remove('hidden');
+      loadingText.textContent = 'カメラを起動中...';
+      status.textContent = '';
+      faceGuide.classList.remove('hidden');
+      faceGuideText.classList.remove('hidden');
+      startupTimer = setTimeout(() => {
+        if (attempt === session) showFailure(new Error('準備が時間内に完了しませんでした。接続とカメラの使用状況を確認してください。'));
+      }, 45000);
+      try {
+        if (location.protocol === 'file:') throw new Error('ファイルを直接開いています。「ARを起動.command」を実行し、http://127.0.0.1:8000/ を開いてください。');
+        if (!window.AFRAME || !window.MINDAR) throw new Error('ARライブラリを読み込めません。通信状態を確認してください。');
+        if (!navigator.mediaDevices?.getUserMedia) throw new Error('localhost または HTTPS で開いてください。');
+        await Promise.all(['man', 'woman'].map(async name => {
+          const image = document.getElementById('img-' + name);
+          try { await image.decode(); }
+          catch (error) { throw new Error(`orion_${name}.png を読み込めません（${error.name}）。URL: ${image.currentSrc || image.src}`); }
+          if (!image.naturalWidth) throw new Error('衣装PNGが空です。');
+        }));
+        if (!scene.hasLoaded) await new Promise((resolve, reject) => {
+          const timeout = setTimeout(() => { scene.removeEventListener('loaded', loaded); reject(new Error('画面の準備がタイムアウトしました。')); }, 15000);
+          function loaded() { clearTimeout(timeout); resolve(); }
+          scene.addEventListener('loaded', loaded, {once: true});
+        });
+        if (attempt !== session) return;
+        // Let the now-visible container acquire its dimensions before resizing.
+        await new Promise(requestAnimationFrame);
+        if (attempt !== session) return;
+        const system = scene.systems['mindar-face-system'];
+        scene.play();
+        scene.renderer.setPixelRatio(1);
+        scene.resize();
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,
+          video: { facingMode: 'user', width: {ideal: 640}, height: {ideal: 480}, frameRate: {ideal: 24, max: 30} }
+        });
+        if (attempt !== session) { stream.getTracks().forEach(track => track.stop()); return; }
+        cameraStream = stream;
+        const video = document.createElement('video');
+        video.muted = true;
+        video.autoplay = true;
+        video.playsInline = true;
+        video.setAttribute('playsinline', '');
+        video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)';
+        system.video = video;
+        system.container = arContainer;
+        arContainer.appendChild(video);
+        video.srcObject = stream;
+        await video.play();
+        if (attempt !== session) return;
+        loadingOverlay.classList.add('hidden');
+        status.textContent = '顔認識を準備中...';
+        if (!arInitialized) {
+          await system._setupAR();
+          arInitialized = true;
+        } else {
+          system._resize();
+        }
+        if (attempt !== session) return;
+        // MindAR sizes the scene, but A-Frame's canvas may still be 0x0
+        // from the initial hidden layout. Resize the renderer after layout.
+        scene.resize();
+        system.lastHasFace = false;
+        system._processVideo();
+        clearTimeout(startupTimer);
+        status.textContent = '';
+      } catch (error) {
+        if (attempt === session) showFailure(error);
+      } finally {
+        starting = false;
+        startBtn.disabled = false;
+      }
+    });
+
+    // ===== BACK TO LANDING =====
+    backBtn.addEventListener('click', () => {
+      stopAR();
+      arContainer.classList.remove('active');
+      landing.style.display = '';
+    });
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden && arStarted) backBtn.click();
+    });
+    window.addEventListener('pagehide', stopAR);
+    scene.addEventListener('loaded', () => { if (!arStarted) scene.pause(); });
+
+    // ===== COSTUME SWITCHING =====
+    function switchCostume(name) {
+      currentCostume = name;
+
+      // Update button states
+      costumeBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.costume === name);
+      });
+
+      // Update plane visibility
+      ['man', 'woman'].forEach(c => {
+        const plane = document.getElementById(`costume-${c}`);
+        if (plane) plane.setAttribute('visible', c === name);
+      });
+    }
+
+    costumeBtns.forEach(btn => {
+      btn.addEventListener('click', () => switchCostume(btn.dataset.costume));
+    });
+
+    // ===== DESCRIPTION PANEL =====
+    infoBtn.addEventListener('click', () => {
+      showDescription(currentCostume);
+    });
+
+    // Double-tap info btn for calibration
+    let infoTapCount = 0;
+    let infoTapTimer = null;
+    infoBtn.addEventListener('click', () => {
+      infoTapCount++;
+      if (infoTapCount === 3) {
+        document.getElementById('calibration').classList.toggle('show');
+        infoTapCount = 0;
+      }
+      clearTimeout(infoTapTimer);
+      infoTapTimer = setTimeout(() => { infoTapCount = 0; }, 500);
+    });
+
+    function showDescription(costume) {
+      const data = costumeData[costume];
+      descTitle.textContent = `${data.icon} ${data.name}`;
+
+      let html = '';
+      data.sections.forEach(s => {
+        if (s.isCompare) {
+          html += `
+            <div class="desc-section">
+              <h3>${s.title}</h3>
+              <div class="compare-box"><p>${s.text}</p></div>
+            </div>`;
+        } else {
+          html += `
+            <div class="desc-section">
+              <h3>${s.title}</h3>
+              <p>${s.text}</p>
+            </div>`;
+        }
+      });
+
+      descBody.innerHTML = html;
+      descPanel.classList.add('open');
+    }
+
+    closeDesc.addEventListener('click', () => {
+      descPanel.classList.remove('open');
+    });
+
+    // ===== CALIBRATION CONTROLS =====
+    ['Y', 'Z', 'W', 'H'].forEach(axis => {
+      const input = document.getElementById(`cal${axis}`);
+      const val = document.getElementById(`cal${axis}Val`);
+      if (!input) return;
+
+      input.addEventListener('input', () => {
+        val.textContent = input.value;
+        applyCalibration();
+      });
+    });
+
+    function applyCalibration() {
+      const y = parseFloat(document.getElementById('calY').value);
+      const z = parseFloat(document.getElementById('calZ').value);
+      const w = parseFloat(document.getElementById('calW').value);
+      const h = parseFloat(document.getElementById('calH').value);
+
+      ['man', 'woman'].forEach(c => {
+        const plane = document.getElementById(`costume-${c}`);
+        if (plane) {
+          // Manual calibration explicitly takes over from automatic fitting.
+          plane.removeAttribute('costume-fit');
+          plane.object3D.scale.set(1, 1, 1);
+          plane.setAttribute('position', `0 ${y} ${z}`);
+          plane.setAttribute('width', w);
+          plane.setAttribute('height', h);
+        }
+      });
+    }
+  </script>
+</body>
+</html>
