@@ -5,11 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>琉球衣装AR体験</title>
 
-  <!-- A-Frame -->
-  <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
-  <!-- MindAR Face Tracking -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-face-aframe.prod.js"></script>
-  <script src="costume-fit.js"></script>
+
 
   <style>
     :root {
@@ -131,7 +127,8 @@
     .background-picker button { padding: 9px 12px; color: white; background: #333; border: 1px solid #777; border-radius: 8px; cursor: pointer; }
     .background-picker button[aria-pressed="true"] { background: #8B1A1A; border-color: #C8A951; }
     #backgroundStatus { max-width: 260px; font-size: 12px; margin-top: 4px; }
-    #arStatus { position: absolute; top: 70px; left: 1rem; right: 1rem; z-index: 110; text-align: center; pointer-events: none; }
+    #arStatus { position: absolute; bottom: calc(var(--controls-height, 150px) + 12px); right: 1rem; max-width: min(80vw, 440px); z-index: 110; text-align: right; pointer-events: none; font-size: 0.8rem; padding: 6px 10px; border-radius: 8px; background: #111b; }
+    #arStatus:empty { display: none; }
     #backBtn { z-index: 310; }
 
     /* ===== COSTUME SWITCHER ===== */
@@ -396,6 +393,12 @@
       width: 100px;
       vertical-align: middle;
     }
+    #costumeCanvas { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
+    .costume-bar { flex-direction:column; align-items:center; gap:6px; }
+    .costume-bar button { padding:9px 12px; border:1px solid #aaa; border-radius:8px; color:white; background:#333; cursor:pointer; }
+    .costume-bar button[aria-pressed="true"] { background:#8b1a1a; border-color:#C8A951; }
+    .person-picker { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; }
+    #faceGuide, #faceGuideText { display:none; }
   </style>
 </head>
 <body>
@@ -444,51 +447,11 @@
     <div class="face-guide" id="faceGuide"></div>
     <p class="face-guide-text" id="faceGuideText">顔をこの枠に合わせてください</p>
 
-    <!-- A-Frame AR Scene -->
-    <a-scene
-      id="arScene"
-      mindar-face="autoStart: false; faceOccluder: false; uiLoading: no; uiScanning: no; uiError: no"
-      embedded
-      color-space="sRGB"
-      renderer="colorManagement: true; sortObjects: true; alpha: true; antialias: false; maxCanvasWidth: 1280; maxCanvasHeight: 720"
-      vr-mode-ui="enabled: false"
-      device-orientation-permission-ui="enabled: false"
-      loading-screen="enabled: false"
-    >
-      <a-assets>
-        <img id="img-man" src="orion_man.png" crossorigin="anonymous">
-        <img id="img-woman" src="orion_woman.png" crossorigin="anonymous">
-      </a-assets>
-
-      <a-camera active="true" position="0 0 0" look-controls="enabled: false" wasd-controls="enabled: false"></a-camera>
-
-      <!-- Orion man costume overlay -->
-      <a-entity mindar-face-target="anchorIndex: 1">
-        <a-plane
-          id="costume-man"
-          costume-fit="kind: man"
-          src="#img-man"
-          width="1"
-          height="1"
-          material="shader: flat; color: #fff; transparent: true; alphaTest: 0.01; side: double; depthWrite: false; npot: true"
-          visible="true"
-        ></a-plane>
-      </a-entity>
-
-      <!-- Orion woman costume overlay -->
-      <a-entity mindar-face-target="anchorIndex: 1">
-        <a-plane
-          id="costume-woman"
-          costume-fit="kind: woman"
-          src="#img-woman"
-          width="1"
-          height="1"
-          material="shader: flat; color: #fff; transparent: true; alphaTest: 0.01; side: double; depthWrite: false; npot: true"
-          visible="false"
-        ></a-plane>
-      </a-entity>
-
-    </a-scene>
+    <div hidden>
+      <img id="img-man" src="orion_man.png" alt="">
+      <img id="img-woman" src="orion_woman.png" alt="">
+    </div>
+    <canvas id="costumeCanvas"></canvas>
 
     <!-- Back button -->
     <button class="back-btn" id="backBtn">←</button>
@@ -496,25 +459,20 @@
     <!-- Info button -->
     <button class="info-btn" id="infoBtn">i</button>
 
-    <!-- Calibration controls (double-tap info btn to toggle) -->
-    <div class="calibration" id="calibration">
-      <strong>位置調整 (プロトタイプ)</strong>
-      <label>Y位置: <input type="range" id="calY" min="-3" max="0" step="0.05" value="-0.85"> <span id="calYVal">-0.85</span></label>
-      <label>Z位置: <input type="range" id="calZ" min="-1" max="1" step="0.05" value="-0.05"> <span id="calZVal">-0.05</span></label>
-      <label>幅: <input type="range" id="calW" min="0.5" max="3" step="0.05" value="1.2"> <span id="calWVal">1.2</span></label>
-      <label>高さ: <input type="range" id="calH" min="0.5" max="5" step="0.05" value="2.68"> <span id="calHVal">2.68</span></label>
-    </div>
-
-    <!-- Costume selector bar -->
-    <div class="costume-bar">
-      <button class="costume-btn active" data-costume="man">
-        <span class="icon">👑</span>
-        男性衣装
-      </button>
-      <button class="costume-btn" data-costume="woman">
-        <span class="icon">👸</span>
-        女性衣装
-      </button>
+    <!-- Per-person assignment -->
+    <div class="costume-bar" aria-label="人物ごとの衣装">
+      <div class="person-picker" role="group" aria-label="衣装を変更する人物">
+        <button data-person="0" aria-pressed="true">人物1</button>
+        <button data-person="1" aria-pressed="false">人物2</button>
+        <button data-person="2" aria-pressed="false">人物3</button>
+        <button id="resetPeople">番号を左から振り直す</button>
+      </div>
+      <span id="assignmentLabel">人物1 の衣装</span>
+      <div role="group" aria-label="選択した人物の衣装">
+        <button data-costume="man" aria-pressed="true">男性衣装</button>
+        <button data-costume="woman" aria-pressed="false">女性衣装</button>
+        <button data-costume="none" aria-pressed="false">衣装なし</button>
+      </div>
     </div>
   </div>
 
@@ -587,271 +545,17 @@
       }
     };
 
-    // ===== STATE =====
-    let currentCostume = 'man';
-    let arStarted = false;
-    let session = 0;
-    let starting = false;
-    let cameraStream = null;
-    let arInitialized = false;
-    let startupTimer;
-
-    // ===== DOM ELEMENTS =====
-    const landing = document.getElementById('landing');
-    const arContainer = document.getElementById('ar-container');
-    const startBtn = document.getElementById('startBtn');
-    const backBtn = document.getElementById('backBtn');
-    const infoBtn = document.getElementById('infoBtn');
-    const descPanel = document.getElementById('descPanel');
-    const descTitle = document.getElementById('descTitle');
-    const descBody = document.getElementById('descBody');
-    const closeDesc = document.getElementById('closeDesc');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    const faceGuide = document.getElementById('faceGuide');
-    const faceGuideText = document.getElementById('faceGuideText');
-    const costumeBtns = document.querySelectorAll('.costume-btn');
-
-    // MindAR 1.2.5 adapter: manage camera lifetime and playback explicitly.
-    const scene = document.getElementById('arScene');
-    const loadingText = loadingOverlay.querySelector('.loading-text');
-    const status = document.getElementById('arStatus');
-
-    function stopAR() {
-      window.costumeBackground?.stop();
-      session++;
-      arStarted = false;
-      starting = false;
-      startBtn.disabled = false;
-      clearTimeout(startupTimer);
-      const system = scene.systems?.['mindar-face-system'];
-      system?.controller?.stopProcessVideo();
-      cameraStream?.getTracks().forEach(track => track.stop());
-      cameraStream = null;
-      if (system?.video) {
-        system.video.pause();
-        system.video.srcObject = null;
-        system.video.remove();
-      }
-      scene.pause?.();
-    }
-
-    function showFailure(error) {
-      console.error('AR startup failed:', error);
-      stopAR();
-      loadingOverlay.classList.add('hidden');
-      status.textContent = '起動できませんでした。' + error.message + ' 左上の矢印で戻って再試行してください。';
-    }
-
-    scene.addEventListener('arReady', () => {
-      if (!arStarted) return;
-      clearTimeout(startupTimer);
-      loadingOverlay.classList.add('hidden');
-      status.textContent = '';
-    });
-
-    scene.addEventListener('targetFound', () => {
-      faceGuide.classList.add('hidden');
-      faceGuideText.classList.add('hidden');
-    });
-    scene.addEventListener('targetLost', () => {
-      faceGuide.classList.remove('hidden');
-      faceGuideText.classList.remove('hidden');
-    });
-
-    // ===== START AR =====
-    startBtn.addEventListener('click', async () => {
-      if (starting || arStarted) return;
-      starting = true;
-      startBtn.disabled = true;
-      arStarted = true;
-      const attempt = ++session;
-      landing.style.display = 'none';
-      arContainer.classList.add('active');
-      loadingOverlay.classList.remove('hidden');
-      loadingText.textContent = 'カメラを起動中...';
-      status.textContent = '';
-      faceGuide.classList.remove('hidden');
-      faceGuideText.classList.remove('hidden');
-      startupTimer = setTimeout(() => {
-        if (attempt === session) showFailure(new Error('準備が時間内に完了しませんでした。接続とカメラの使用状況を確認してください。'));
-      }, 45000);
-      try {
-        if (location.protocol === 'file:') throw new Error('ファイルを直接開いています。「ARを起動.command」を実行し、http://127.0.0.1:8000/ を開いてください。');
-        if (!window.AFRAME || !window.MINDAR) throw new Error('ARライブラリを読み込めません。通信状態を確認してください。');
-        if (!navigator.mediaDevices?.getUserMedia) throw new Error('localhost または HTTPS で開いてください。');
-        await Promise.all(['man', 'woman'].map(async name => {
-          const image = document.getElementById('img-' + name);
-          try { await image.decode(); }
-          catch (error) { throw new Error(`orion_${name}.png を読み込めません（${error.name}）。URL: ${image.currentSrc || image.src}`); }
-          if (!image.naturalWidth) throw new Error('衣装PNGが空です。');
-        }));
-        if (!scene.hasLoaded) await new Promise((resolve, reject) => {
-          const timeout = setTimeout(() => { scene.removeEventListener('loaded', loaded); reject(new Error('画面の準備がタイムアウトしました。')); }, 15000);
-          function loaded() { clearTimeout(timeout); resolve(); }
-          scene.addEventListener('loaded', loaded, {once: true});
-        });
-        if (attempt !== session) return;
-        // Let the now-visible container acquire its dimensions before resizing.
-        await new Promise(requestAnimationFrame);
-        if (attempt !== session) return;
-        const system = scene.systems['mindar-face-system'];
-        scene.play();
-        scene.renderer.setPixelRatio(1);
-        scene.resize();
-        const stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,
-          video: { facingMode: 'user', width: {ideal: 640}, height: {ideal: 480}, frameRate: {ideal: 24, max: 30} }
-        });
-        if (attempt !== session) { stream.getTracks().forEach(track => track.stop()); return; }
-        cameraStream = stream;
-        const video = document.createElement('video');
-        video.muted = true;
-        video.autoplay = true;
-        video.playsInline = true;
-        video.setAttribute('playsinline', '');
-        video.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)';
-        system.video = video;
-        system.container = arContainer;
-        arContainer.appendChild(video);
-        video.srcObject = stream;
-        await video.play();
-        if (attempt !== session) return;
-        loadingOverlay.classList.add('hidden');
-        status.textContent = '顔認識を準備中...';
-        if (!arInitialized) {
-          await system._setupAR();
-          arInitialized = true;
-        } else {
-          system._resize();
-        }
-        if (attempt !== session) return;
-        // MindAR sizes the scene, but A-Frame's canvas may still be 0x0
-        // from the initial hidden layout. Resize the renderer after layout.
-        scene.resize();
-        system.lastHasFace = false;
-        system._processVideo();
-        window.costumeBackground?.start(video);
-        clearTimeout(startupTimer);
-        status.textContent = '';
-      } catch (error) {
-        if (attempt === session) showFailure(error);
-      } finally {
-        if (attempt === session) {
-          starting = false;
-          startBtn.disabled = false;
-        }
-      }
-    });
-
-    // ===== BACK TO LANDING =====
-    backBtn.addEventListener('click', () => {
-      stopAR();
-      arContainer.classList.remove('active');
-      landing.style.display = '';
-    });
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden && arStarted) backBtn.click();
-    });
-    window.addEventListener('pagehide', stopAR);
-    scene.addEventListener('loaded', () => { if (!arStarted) scene.pause(); });
-
-    // ===== COSTUME SWITCHING =====
-    function switchCostume(name) {
-      currentCostume = name;
-
-      // Update button states
-      costumeBtns.forEach(btn => {
-        btn.classList.toggle('active', btn.dataset.costume === name);
-      });
-
-      // Update plane visibility
-      ['man', 'woman'].forEach(c => {
-        const plane = document.getElementById(`costume-${c}`);
-        if (plane) plane.setAttribute('visible', c === name);
-      });
-    }
-
-    costumeBtns.forEach(btn => {
-      btn.addEventListener('click', () => switchCostume(btn.dataset.costume));
-    });
-
-    // ===== DESCRIPTION PANEL =====
-    infoBtn.addEventListener('click', () => {
-      showDescription(currentCostume);
-    });
-
-    // Double-tap info btn for calibration
-    let infoTapCount = 0;
-    let infoTapTimer = null;
-    infoBtn.addEventListener('click', () => {
-      infoTapCount++;
-      if (infoTapCount === 3) {
-        document.getElementById('calibration').classList.toggle('show');
-        infoTapCount = 0;
-      }
-      clearTimeout(infoTapTimer);
-      infoTapTimer = setTimeout(() => { infoTapCount = 0; }, 500);
-    });
-
-    function showDescription(costume) {
-      const data = costumeData[costume];
-      descTitle.textContent = `${data.icon} ${data.name}`;
-
-      let html = '';
-      data.sections.forEach(s => {
-        if (s.isCompare) {
-          html += `
-            <div class="desc-section">
-              <h3>${s.title}</h3>
-              <div class="compare-box"><p>${s.text}</p></div>
-            </div>`;
-        } else {
-          html += `
-            <div class="desc-section">
-              <h3>${s.title}</h3>
-              <p>${s.text}</p>
-            </div>`;
-        }
-      });
-
-      descBody.innerHTML = html;
-      descPanel.classList.add('open');
-    }
-
-    closeDesc.addEventListener('click', () => {
-      descPanel.classList.remove('open');
-    });
-
-    // ===== CALIBRATION CONTROLS =====
-    ['Y', 'Z', 'W', 'H'].forEach(axis => {
-      const input = document.getElementById(`cal${axis}`);
-      const val = document.getElementById(`cal${axis}Val`);
-      if (!input) return;
-
-      input.addEventListener('input', () => {
-        val.textContent = input.value;
-        applyCalibration();
-      });
-    });
-
-    function applyCalibration() {
-      const y = parseFloat(document.getElementById('calY').value);
-      const z = parseFloat(document.getElementById('calZ').value);
-      const w = parseFloat(document.getElementById('calW').value);
-      const h = parseFloat(document.getElementById('calH').value);
-
-      ['man', 'woman'].forEach(c => {
-        const plane = document.getElementById(`costume-${c}`);
-        if (plane) {
-          // Manual calibration explicitly takes over from automatic fitting.
-          plane.removeAttribute('costume-fit');
-          plane.object3D.scale.set(1, 1, 1);
-          plane.setAttribute('position', `0 ${y} ${z}`);
-          plane.setAttribute('width', w);
-          plane.setAttribute('height', h);
-        }
-      });
-    }
+    window.showCostumeDescription = function(name) {
+      const data = costumeData[name];
+      document.getElementById('descTitle').textContent = data.name;
+      document.getElementById('descBody').innerHTML = data.sections.map(s =>
+        '<div class="desc-section"><h3>' + s.title + '</h3><p>' + s.text + '</p></div>'
+      ).join('');
+      document.getElementById('descPanel').classList.add('open');
+    };
+    document.getElementById('closeDesc').addEventListener('click', () =>
+      document.getElementById('descPanel').classList.remove('open'));
   </script>
+  <script type="module" src="multiface.mjs"></script>
 </body>
 </html>
