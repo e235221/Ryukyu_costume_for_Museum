@@ -15,12 +15,25 @@ if (window.ResizeObserver) {
   }).observe(document.querySelector('.costume-bar'));
 }
 function refresh() {
-  people.forEach((b,i)=>{b.setAttribute('aria-pressed',String(i===selected));b.textContent=`人物${i+1}${slots.slots[i].visible?' ✓':'（未検出）'}`;});
-  clothing.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.costume===outfits[selected])));
-  $('assignmentLabel').textContent=`人物${selected+1} の衣装・顔`;
+  const firstVisible=slots.slots.findIndex(slot=>slot.visible);
+  if(!slots.slots[selected].visible&&firstVisible>=0)selected=firstVisible;
+  const hasSelectedPerson=firstVisible>=0&&slots.slots[selected].visible;
+  people.forEach((b,i)=>{
+    const visible=slots.slots[i].visible;
+    b.disabled=!visible;
+    b.setAttribute('aria-disabled',String(!visible));
+    b.setAttribute('aria-pressed',String(visible&&i===selected));
+    b.textContent=`人物${i+1}${visible?' ✓':'（未検出）'}`;
+  });
+  clothing.forEach(b=>{
+    b.disabled=!hasSelectedPerson;
+    b.setAttribute('aria-disabled',String(!hasSelectedPerson));
+    b.setAttribute('aria-pressed',String(b.dataset.costume===outfits[selected]));
+  });
+  $('assignmentLabel').textContent=hasSelectedPerson?`人物${selected+1} の衣装・顔`:'人物を検出すると衣装を選べます';
 }
-people.forEach(b=>b.addEventListener('click',()=>{selected=Number(b.dataset.person);refresh();}));
-clothing.forEach(b=>b.addEventListener('click',()=>{outfits[selected]=b.dataset.costume;refresh();draw();}));
+people.forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;selected=Number(b.dataset.person);refresh();}));
+clothing.forEach(b=>b.addEventListener('click',()=>{if(b.disabled)return;outfits[selected]=b.dataset.costume;refresh();draw();}));
 $('resetPeople').addEventListener('click',()=>{slots.reset();refresh();draw();});
 function stop() {
   epoch++;cancelAnimationFrame(raf);window.costumeBackground?.stop();

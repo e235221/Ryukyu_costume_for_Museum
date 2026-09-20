@@ -472,6 +472,7 @@
     .costume-bar { flex-direction:column; align-items:center; gap:6px; }
     .costume-bar button { padding:9px 12px; border:1px solid #aaa; border-radius:8px; color:white; background:#333; cursor:pointer; }
     .costume-bar button[aria-pressed="true"] { background:#8b1a1a; border-color:#C8A951; }
+    .costume-bar button:disabled { color:#aaa; background:#555; border-color:#777; opacity:0.48; cursor:not-allowed; }
     .person-picker { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; }
     #faceGuide, #faceGuideText { display:none; }
   </style>
@@ -757,6 +758,6 @@
     document.getElementById('closeDesc').addEventListener('click', () =>
       document.getElementById('descPanel').classList.remove('open'));
   </script>
-  <script type="module" src="multiface.mjs?v=20260920-2"></script>
+  <script type="module" src="multiface.mjs?v=20260920-3"></script>
 </body>
 </html>
