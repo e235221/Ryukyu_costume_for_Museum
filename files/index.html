@@ -308,12 +308,27 @@
       padding-bottom: max(2rem, env(safe-area-inset-bottom));
     }
 
+    .caption-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+      padding: 0.75rem 1.2rem;
+      color: rgba(240,230,211,0.9);
+      background: rgba(26,26,26,0.92);
+      border-bottom: 1px solid rgba(200,169,81,0.16);
+      font-size: 0.82rem;
+    }
+
+    .caption-toolbar label { flex: 0 0 auto; font-weight: 600; }
+    .caption-toolbar input[type="range"] { flex: 1 1 150px; min-width: 90px; accent-color: var(--gold); }
+    .caption-toolbar output { flex: 0 0 3.4rem; text-align: right; font-variant-numeric: tabular-nums; }
+
     .desc-section {
       margin-bottom: 1.5rem;
     }
 
     .desc-section h3 {
-      font-size: 0.85rem;
+      font-size: 0.85em;
       font-weight: 600;
       color: var(--gold);
       margin-bottom: 0.5rem;
@@ -323,10 +338,33 @@
     }
 
     .desc-section p {
-      font-size: 0.95rem;
+      font-size: 0.95em;
       line-height: 1.8;
       color: rgba(240,230,211,0.9);
     }
+
+    .desc-markdown h2 {
+      margin: 0 0 1.2rem;
+      color: var(--gold);
+      font-size: 1.35em;
+      line-height: 1.5;
+    }
+
+    .desc-markdown h3 {
+      margin: 2rem 0 0.75rem;
+      color: var(--gold);
+      font-size: 1em;
+      line-height: 1.6;
+    }
+
+    .desc-markdown p {
+      margin: 0 0 1rem;
+      color: rgba(240,230,211,0.9);
+      font-size: 0.95em;
+      line-height: 1.9;
+    }
+
+    .desc-markdown a { color: #f0d77a; text-decoration: underline; }
 
     .compare-box {
       margin-top: 0.8rem;
@@ -519,8 +557,8 @@
       </div>
       <span id="assignmentLabel">人物1 の衣装・顔</span>
       <div role="group" aria-label="選択した人物の衣装">
-        <button data-costume="man" aria-pressed="true">男性衣装</button>
-        <button data-costume="woman" aria-pressed="false">女性衣装</button>
+        <button data-costume="man" aria-pressed="true">男性の琉装</button>
+        <button data-costume="woman" aria-pressed="false">女性の琉装</button>
         <button data-costume="bird" aria-pressed="false">ヤンバルクイナ</button>
         <button data-costume="none" aria-pressed="false">なし</button>
       </div>
@@ -533,78 +571,187 @@
       <h2 id="descTitle">衣装解説</h2>
       <button class="close-btn" id="closeDesc">✕</button>
     </div>
+    <div class="caption-toolbar">
+      <label for="captionFontSize">文字サイズ</label>
+      <input id="captionFontSize" type="range" min="80" max="160" step="10" value="100" aria-label="キャプションの文字サイズ">
+      <output id="captionFontSizeValue" for="captionFontSize">100%</output>
+    </div>
     <div class="desc-body" id="descBody"></div>
   </div>
 
   <script src="background.js?v=20260920-2"></script>
   <script>
     // ===== COSTUME DATA =====
+    const ryusoMarkdown = `## 琉球の装い　琉装
+
+色あざやかな布，大きく開いた袖，ゆったりとした形。
+
+琉装（りゅうそう）は，琉球王国の時代に育まれた沖縄の伝統的な装いです。沖縄のことばでは，ウチナースガイともよばれています。
+
+琉球王国は，中国や日本をはじめ，海の向こうのさまざまな地域と交流していました。そうした交流の中で取り入れられた文化や技術と，沖縄の気候や暮らしが結びつき，琉球ならではの装いが生まれていきました。
+
+### 暑い沖縄で過ごすための工夫
+
+琉装をよく見ると，袖が広く，全体がゆったりと作られていることがわかります。
+
+この形は，暑く湿気（しっけ）の多い沖縄で，少しでも風を通しやすくするための工夫のひとつです。また，袖口から内側が見えるため，表の布だけでなく，内側の色にも気が配られています。
+
+見た目の美しさだけでなく，沖縄の気候に合わせた工夫がかくされているのです。
+
+### 女性の着方　ウシンチー
+
+女性の琉装には，ウシンチーとよばれる着方があります。
+
+日本本土の着物のように太い帯を腰に巻くのではなく，腰につけた細いひもに，衣服の一部をはさんで形を整えます。
+
+腰のまわりを強くしめつけないため，ゆったりと着ることができます。
+
+衣装を見るときは，腰のまわりがどのようになっているかにも注目してみてください。
+
+### 男性の着方
+
+男性は，腰のあたりを帯で固定し，帯の結び目を前にします。
+
+また，男性が頭につけるかぶりものに，ハチマチがあります。ハチマチにはいくつかの色があり，その色によって位の違いを表していました。
+
+衣服だけでなく，頭の装いもその人の立場を表す大切なものでした。
+
+### 服を見れば，身分もわかった？
+
+琉球王国では，身分（みぶん）や位（くらい）によって，着ることのできる服の色や模様，布の種類などに違いがありました。
+
+服は，体をおおうためだけのものではありません。その人がどのような立場なのかを表す役割も持っていました。
+
+男性が頭につけるハチマチもそのひとつです。ハチマチにはいくつかの色があり，位によって使える色が決められていました。
+
+昔の人びとは，服や頭の装いを見ることで，その人の立場を知ることができたのです。
+
+### 華やかな琉装は，だれでも着られた？
+
+ここで，衣装をもう一度見てみましょう。
+
+あざやかな色，大きな模様，美しい絹の布。昔の琉球の人びとは，みんなこのような服を着ていたのでしょうか。
+
+じつは，そうではありません。
+
+琉球王国では，王族や士族，庶民などの身分があり，身分や位によって着ることのできる服に決まりがありました。とくに，紅型の色や模様の大きさ，衣服に使う布などには違いがありました。
+
+士族であれば，だれでも王族と同じ衣装を着ることができたわけではありません。大きく華やかな模様などは，王族をはじめとする限られた身分の人に許されたものでした。
+
+また，庶民も，王族や位の高い士族と同じような上質な絹（きぬ）や華（はな）やかな模様（もよう）を，自由に使うことはできませんでした。
+
+つまり，現在まで伝わっている華やかな琉装の中には，王族や位の高い人びとが身につけた特別な衣装も多くあります。
+
+では，この衣装はどのような人が着たのでしょうか。
+
+色や模様，布の種類にも注目すると，衣装から昔の社会のようすが見えてきます。
+
+### 沖縄ならではの染めと織り
+
+琉装を美しく彩るのが，沖縄各地で作られてきた染物や織物です。
+
+代表的なものに，色あざやかな紅型（びんがた）があります。そのほかにも，首里織（しゅりおり），久米島紬（くめじまつむぎ），宮古上布（みやこじょうふ），八重山上布（やえやまじょうふ），芭蕉布（ばしょうふ）などがあります。
+
+使う材料や作り方は，島や地域によってさまざまです。
+
+同じ沖縄の中でも，土地によって違った染めや織りの文化が育ってきました。
+
+もっと知りたい方は[こちら（KOGEI JAPAN）](https://kogeijapan.com/locale/ja_JP/list/?category=1&pref=47)
+
+### 髪型も大切な装い
+
+衣服だけでなく，髪型も琉装の大切な一部です。
+
+女性の伝統的な髪型のひとつに，ウチナーカンプーがあります。長い髪をまとめて結い上げ，大きく美しい形を作ります。
+
+服，髪型，頭につけるものまで合わせて，全体の姿が作られていました。
+
+## 歴史
+
+むかし，今の沖縄県が琉球という国だったころのお話です。琉球は，日本の薩摩藩（さつまはん）とつながりを持ちながら，中国とも深い交流を続けていました。
+
+そのため，琉球の装いには，中国や日本など，海の向こうから伝わったさまざまな文化の影響が見られます。それらをそのまま取り入れるのではなく，沖縄の気候や暮らしに合わせながら，琉球独自の服の文化が育っていきました。
+
+琉球王国ができるより前の人びとの服については，くわしい記録があまり残っていません。そのため，どのような服を着ていたのか，わかっていないこともあります。
+
+15世紀から16世紀ごろには，中国の明（みん）から伝わった衣服や制度の影響も受けていました。その後，中国では明にかわって清（しん）が成立し，琉球をとりまく社会も大きく変わっていきました。
+
+1609年には薩摩藩が琉球へ侵攻しました。その後も琉球王国は続き，中国との交流を保ちながら，日本からもさまざまな品物や文化が入ってくるようになります。
+
+こうした長い交流の中で，琉球独自の衣服の形や着方がしだいに整えられていきました。
+
+17世紀の後半になると，士族と庶民などの身分の違いが，それまでよりはっきりと制度に表れるようになります。さらに18世紀には，役人の位や王府の制度が細かく整えられていきました。
+
+そして1857年には，王府から衣服定（いふくさだめ）が出されました。そこでは，身分に応じた衣服などについて決まりが定められています。
+
+服装は，好きな色や模様を自由に選ぶだけのものではありませんでした。身分や位によって，どのような布や模様を使うことができるのかにも違いがあったのです。
+
+とくに紅型では，士族以上の人びとが着ることができ，その中でも大きく華やかな模様などは，王族のような限られた身分の人びとに許されていました。
+
+現在見かけるような華やかな琉装を見たときには，その美しさだけでなく，だれがこの服を着ることができたのだろう，というところにも注目してみてください。
+
+一着の衣装から，琉球王国の文化だけでなく，当時の社会のしくみも読み取ることができるのです。`;
+
+    const ryusoCaption = {name: '琉球の装い　琉装', markdown: ryusoMarkdown};
+    const yanbaruMarkdown = `### 飛べない鳥が，森を走る。
+
+ヤンバルクイナには翼があります。しかし，空を飛ぶことはほとんどできません。
+
+では，なぜ鳥なのに飛ばないのでしょうか。
+ヤンバルクイナが暮らしてきたやんばるの森には，もともと地上で生活する鳥をおびやかす天敵(てんてき)が少なく，飛んで逃げる必要があまりありませんでした。長い時間をかけて森の地面での暮らしに適応し，今では落ち葉の間を歩きながら，昆虫やミミズ，カタツムリなどを探して食べています。
+
+そして，この鳥に出会える場所は，世界中を探してもほとんどありません。ヤンバルクイナは，**沖縄島北部だけに生息する固有種(こゆうしゅ)**です。1981年に新しい鳥の種として発表されました。人の暮らす地域のすぐ近くに，それまで科学的に知られていなかった鳥が生きていたのです。
+
+しかし，地面を走って暮らすことは，大きな弱点にもなりました。人によって持ち込まれたマングースやネコなどによる捕食(ほしょく)，道路での交通事故，森林環境の変化などによって，ヤンバルクイナは生存をおびやかされてきました。現在も，生息地を守る活動や外来生物への対策など，さまざまな保全活動(ほぜんかつどう)が続けられています。
+
+もし，やんばるの森を訪れることがあれば，少しだけ耳を澄ませてみてください。姿は見えなくても，森の奥から鋭い鳴き声が聞こえてくるかもしれません。`;
     const costumeData = {
-      man: {
-        name: '琉球男性衣装（オリオン）',
-        icon: '👑',
-        sections: [
-          {
-            title: '衣装名称',
-            text: '御絵図（おえず）に描かれた琉球国王の礼装。朝貢貿易時の正装として着用された。外交儀礼の場で王の権威を示す役割を持っていた。'
-          },
-          {
-            title: '生地・素材',
-            text: '紅型（びんがた）染めの絹地を使用。金糸・銀糸による龍や鳳凰の刺繍が全面に施されている。紅型は琉球独自の染色技法であり、中国の型染めと日本の友禅染めの両方の影響を受けている。染料には琉球藍やフクギなど沖縄特有の植物が使われた。'
-          },
-          {
-            title: '冠（ハチマチ）',
-            text: '頭部に被る冠はハチマチ（鉢巻）と呼ばれる。黒い漆塗りの本体に金の簪（かんざし）を挿す形式で、簪の形状や素材が身分を示した。国王のハチマチには最も大きく華麗な金簪が用いられた。'
-          },
-          {
-            title: '時代背景',
-            text: '琉球王国（1429〜1879年）は中国と日本の間に位置し、東南アジアも含む中継貿易で繁栄した。衣装は中国の冊封体制下で与えられた官服の影響を受けつつ、琉球独自の文様や色彩感覚が加えられている。1609年の薩摩侵攻後も、中国への朝貢関係は維持され、礼装文化も継続した。'
-          },
-          {
-            title: '王族と庶民の比較',
-            text: '国王の衣装は絹に紅型染め・金糸刺繍という最高級素材で構成される。一方、庶民は芭蕉布や苧麻（ちょま）など植物繊維の衣服が中心で、色や文様にも厳格な制限があった。身分制度によって着用できる衣服は細かく定められており、衣装は社会的地位を可視化する手段であった。',
-            isCompare: true
-          }
-        ]
-      },
-      woman: {
-        name: '琉球女性衣装（オリオン）',
-        icon: '👸',
-        sections: [
-          {
-            title: '衣装名称',
-            text: '琉球王妃が儀式や公式行事で着用した礼装。鳳凰文様の上衣と花柄の袴（カカン）で構成される。王と対になる装いとして、宮廷の格式を表現した。'
-          },
-          {
-            title: '生地・素材',
-            text: '上衣は赤地の絹に鳳凰・雲・波の吉祥文様を金糸で施したもの。鳳凰は中国文化において皇后・王妃を象徴する霊鳥とされる。内側の袴は紫〜青系の絹地に花柄があしらわれ、階層的な色の重なりが格式の高さを示す。'
-          },
-          {
-            title: '髪型と装飾',
-            text: '髪は高く結い上げ、金やべっ甲のかんざし（ジーファー）を挿す。髪型と簪の形式は身分を示す重要な要素であった。王妃のかんざしは特に大型で精巧な細工が施されていた。頭部には金属製の冠も着用し、玉飾りが配された。'
-          },
-          {
-            title: '時代背景',
-            text: '琉球王国の宮廷では女性も儀礼上の重要な役割を担った。王妃の礼装は中国の后妃服制の影響を強く受けているが、配色や文様の配置に琉球独自の美意識が反映されている。特に赤と金の組み合わせは琉球の宮廷文化を代表する色彩である。'
-          },
-          {
-            title: '王族と庶民の比較',
-            text: '王妃の衣装には絹・金糸・鳳凰文様といった最上位の素材と意匠が集中している。庶民の女性は芭蕉布や木綿の簡素な衣服を着用し、染色にも制約があった。ただし庶民の衣服にも実用美があり、芭蕉布の涼しさや藍染めの耐久性は沖縄の気候に適応したものであった。',
-            isCompare: true
-          }
-        ]
-      }
+      man: ryusoCaption,
+      woman: ryusoCaption,
+      bird: {name: 'ヤンバルクイナに変身', markdown: yanbaruMarkdown}
     };
 
+    function escapeHtml(value) {
+      return value.replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
+    }
+
+    function renderInlineMarkdown(value) {
+      const pattern = /\[([^\]]+)\]\((https:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*/g;
+      let html = '', lastIndex = 0, match;
+      while ((match = pattern.exec(value))) {
+        html += escapeHtml(value.slice(lastIndex, match.index));
+        html += match[3]
+          ? `<strong>${escapeHtml(match[3])}</strong>`
+          : `<a href="${escapeHtml(match[2])}" target="_blank" rel="noopener noreferrer">${escapeHtml(match[1])}</a>`;
+        lastIndex = pattern.lastIndex;
+      }
+      return html + escapeHtml(value.slice(lastIndex));
+    }
+
+    function renderMarkdown(markdown) {
+      return '<div class="desc-markdown">' + markdown.trim().split(/\n\s*\n/).map(block => {
+        if (block.startsWith('### ')) return `<h3>${escapeHtml(block.slice(4))}</h3>`;
+        if (block.startsWith('## ')) return `<h2>${escapeHtml(block.slice(3))}</h2>`;
+        return `<p>${renderInlineMarkdown(block.replace(/\n/g, ' '))}</p>`;
+      }).join('') + '</div>';
+    }
+
+    const captionFontSize = document.getElementById('captionFontSize');
+    const captionFontSizeValue = document.getElementById('captionFontSizeValue');
+    const captionBody = document.getElementById('descBody');
+    function applyCaptionFontSize(value) {
+      const percent = Math.min(160, Math.max(80, Number(value) || 100));
+      captionFontSize.value = String(percent);
+      captionFontSizeValue.textContent = `${percent}%`;
+      captionBody.style.fontSize = `${percent}%`;
+    }
+    captionFontSize.addEventListener('input', event => applyCaptionFontSize(event.target.value));
+    applyCaptionFontSize(captionFontSize.value);
+
     window.showCostumeDescription = function(name) {
-      const data = name === 'bird' ? {
-        name: 'ヤンバルクイナに変身',
-        sections: [{title: '顔の置き換え', text: '顔の位置・大きさ・傾きに合わせてヤンバルクイナの画像を重ねます。体や服はカメラ映像のままです。「なし」で元の顔に戻せます。'}]
-      } : costumeData[name];
+      const data = costumeData[name];
       document.getElementById('descTitle').textContent = data.name;
-      document.getElementById('descBody').innerHTML = data.sections.map(s =>
-        '<div class="desc-section"><h3>' + s.title + '</h3><p>' + s.text + '</p></div>'
-      ).join('');
+      document.getElementById('descBody').innerHTML = renderMarkdown(data.markdown);
       document.getElementById('descPanel').classList.add('open');
     };
     document.getElementById('closeDesc').addEventListener('click', () =>
