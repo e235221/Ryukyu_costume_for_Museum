@@ -1,4 +1,5 @@
 import {FaceSlots, faceGeometry} from './face-slots.mjs';
+import {composePhoto, photoFilename} from './photo-capture.mjs';
 const $=id=>document.getElementById(id);
 const container=$('ar-container'),canvas=$('costumeCanvas'),ctx=canvas.getContext('2d');
 const status=$('arStatus'),loading=$('loadingOverlay'),start=$('startBtn');
@@ -25,7 +26,7 @@ function stop() {
   epoch++;cancelAnimationFrame(raf);window.costumeBackground?.stop();
   stream?.getTracks().forEach(t=>t.stop());stream=null;
   if(video){video.pause();video.srcObject=null;video.remove();video=null;}
-  slots.reset();ctx.clearRect(0,0,canvas.width,canvas.height);refresh();start.disabled=false;
+  slots.reset();ctx.clearRect(0,0,canvas.width,canvas.height);refresh();start.disabled=false;$('photoBtn').disabled=true;
 }
 function fail(error) {stop();loading.classList.add('hidden');status.textContent=`起動できません：${error.message}。左上の矢印で戻って再試行してください。`;console.error(error);}
 async function detector() {
@@ -38,11 +39,12 @@ async function detector() {
   })().catch(error=>{modelPromise=null;throw error;});
   return modelPromise;
 }
-function draw() {
+function renderOverlay(targetCanvas=canvas,{clear=true,includeLabels=true}={}) {
   if(!video?.videoWidth)return;
   const w=container.clientWidth,h=container.clientHeight;if(!w||!h)return;
-  if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
-  ctx.clearRect(0,0,w,h);
+  if(targetCanvas.width!==w||targetCanvas.height!==h){targetCanvas.width=w;targetCanvas.height=h;}
+  const targetContext=targetCanvas.getContext('2d');
+  if(clear)targetContext.clearRect(0,0,w,h);
   const scale=Math.max(w/video.videoWidth,h/video.videoHeight),vw=video.videoWidth*scale,vh=video.videoHeight*scale;
   const project=p=>({x:p.x*vw+(w-vw)/2,y:p.y*vh+(h-vh)/2});
   slots.slots.filter(s=>s.visible).sort((a,b)=>a.face.size-b.face.size).forEach(slot=>{
@@ -56,25 +58,61 @@ function draw() {
         Math.hypot(left.x-right.x,left.y-right.y)*1.35/1136,
         Math.hypot(top.x-bottom.x,top.y-bottom.y)*1.25/1049
       );
-      ctx.save();ctx.translate(c.x,c.y);ctx.rotate(angle);
-      ctx.drawImage(images.bird,-626*factor,-623.5*factor,1254*factor,1254*factor);
-      ctx.restore();
+      targetContext.save();targetContext.translate(c.x,c.y);targetContext.rotate(angle);
+      targetContext.drawImage(images.bird,-626*factor,-623.5*factor,1254*factor,1254*factor);
+      targetContext.restore();
     } else if(kind!=='none') {
       const hole=kind==='man'?{x:338.5,y:228.5,w:65,h:79}:{x:344,y:277,w:62,h:76};
       const factor=Math.max(Math.hypot(left.x-right.x,left.y-right.y)/hole.w,Math.hypot(top.x-bottom.x,top.y-bottom.y)/hole.h);
-      ctx.save();ctx.translate(c.x,c.y);ctx.rotate(angle);
-      ctx.drawImage(images[kind],-hole.x*factor,-hole.y*factor,683*factor,1024*factor);ctx.restore();
+      targetContext.save();targetContext.translate(c.x,c.y);targetContext.rotate(angle);
+      targetContext.drawImage(images[kind],-hole.x*factor,-hole.y*factor,683*factor,1024*factor);targetContext.restore();
     }
     const age = performance.now() - slot.detectedAt;
-    if (age < 5000) {
-      ctx.save();
-      ctx.globalAlpha = Math.min(1, Math.max(0, (5000-age)/500));
-      ctx.fillStyle=slot.id===selected?'#8b1a1a':'#222';ctx.fillRect(c.x-30,top.y-34,60,25);
-      ctx.font='bold 14px sans-serif';ctx.textAlign='center';ctx.fillStyle='white';ctx.fillText(`人物${slot.id+1}`,c.x,top.y-16);
-      ctx.restore();
+    if (includeLabels && age < 5000) {
+      targetContext.save();
+      targetContext.globalAlpha = Math.min(1, Math.max(0, (5000-age)/500));
+      targetContext.fillStyle=slot.id===selected?'#8b1a1a':'#222';targetContext.fillRect(c.x-30,top.y-34,60,25);
+      targetContext.font='bold 14px sans-serif';targetContext.textAlign='center';targetContext.fillStyle='white';targetContext.fillText(`人物${slot.id+1}`,c.x,top.y-16);
+      targetContext.restore();
     }
   });
 }
+function draw(){renderOverlay();}
+
+let photoMessageTimer;
+function photoMessage(message) {
+  clearTimeout(photoMessageTimer);
+  $('photoStatus').textContent=message;
+  photoMessageTimer=setTimeout(()=>$('photoStatus').textContent='',4000);
+}
+function canvasBlob(target) {
+  return new Promise((resolve,reject)=>target.toBlob(blob=>blob?resolve(blob):reject(new Error('写真データを作成できません')),'image/png'));
+}
+$('photoBtn').addEventListener('click',async()=>{
+  const button=$('photoBtn');
+  if(!video||video.readyState<2||!model){photoMessage('カメラと顔認識の準備が完了してから撮影してください');return;}
+  const selectedBackground=document.querySelector('[data-background][aria-pressed="true"]')?.dataset.background;
+  const backgroundCanvas=$('backgroundCanvas');
+  if(selectedBackground&&selectedBackground!=='none'&&backgroundCanvas.hidden){photoMessage('背景の準備が完了してから撮影してください');return;}
+  button.disabled=true;
+  try {
+    const width=container.clientWidth,height=container.clientHeight;
+    const cleanCostumes=document.createElement('canvas');
+    renderOverlay(cleanCostumes,{includeLabels:false});
+    const output=document.createElement('canvas');
+    composePhoto(output,{video,backgroundCanvas:backgroundCanvas.hidden?null:backgroundCanvas,costumeCanvas:cleanCostumes,width,height});
+    const blob=await canvasBlob(output);
+    const url=URL.createObjectURL(blob);
+    const link=document.createElement('a');
+    link.href=url;link.download=photoFilename();link.rel='noopener';
+    document.body.appendChild(link);link.click();link.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    photoMessage('写真を保存しました');
+  } catch(error) {
+    console.error('Photo capture:',error);
+    photoMessage(`写真を保存できません：${error.message}`);
+  } finally {button.disabled=!(video&&model);}
+});
 function frame(now,token) {
   if(token!==epoch||!video)return;
   try {
@@ -104,7 +142,7 @@ start.addEventListener('click',async()=>{
     video.style.cssText='position:absolute;inset:0;width:100%;height:100%;object-fit:cover;transform:scaleX(-1)';container.appendChild(video);video.srcObject=stream;
     await video.play();if(token!==epoch)return;
     loading.classList.add('hidden');status.textContent='複数人の顔認識を準備中...';
-    model=await detector();if(token!==epoch)return;
+    model=await detector();if(token!==epoch)return;$('photoBtn').disabled=false;
     window.costumeBackground?.start(video);lastTime=-1;lastFrame=0;slots.reset();frame(performance.now(),token);
   } catch(error){if(token===epoch)fail(error);}
   finally {clearTimeout(timeout);}

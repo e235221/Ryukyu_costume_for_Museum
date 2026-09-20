@@ -123,13 +123,50 @@
 
     #ar-container > video { z-index: 0 !important; }
     #backgroundCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-    .background-picker { position: absolute; top: 75px; right: 12px; z-index: 120; background: #111c; padding: 8px; border-radius: 12px; }
+    .background-picker { position: absolute; top: 75px; right: 12px; z-index: 120; max-width: min(92vw, 390px); background: #111c; padding: 8px; border-radius: 12px; }
+    .background-picker summary { cursor: pointer; font-weight: 700; list-style-position: inside; user-select: none; }
+    .background-options { display: grid; gap: 6px; margin-top: 8px; }
+    .background-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
     .background-picker button { padding: 9px 12px; color: white; background: #333; border: 1px solid #777; border-radius: 8px; cursor: pointer; }
     .background-picker button[aria-pressed="true"] { background: #8B1A1A; border-color: #C8A951; }
     #backgroundStatus { max-width: 260px; font-size: 12px; margin-top: 4px; }
     #arStatus { position: absolute; bottom: calc(var(--controls-height, 150px) + 12px); right: 1rem; max-width: min(80vw, 440px); z-index: 110; text-align: right; pointer-events: none; font-size: 0.8rem; padding: 6px 10px; border-radius: 8px; background: #111b; }
     #arStatus:empty { display: none; }
     #backBtn { z-index: 310; }
+
+    .photo-btn {
+      position: fixed;
+      top: max(1rem, env(safe-area-inset-top));
+      left: 50%;
+      z-index: 310;
+      transform: translateX(-50%);
+      min-height: 44px;
+      padding: 0.65rem 1rem;
+      border: 1.5px solid rgba(255,255,255,0.35);
+      border-radius: 999px;
+      color: white;
+      background: rgba(139,26,26,0.9);
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .photo-btn:disabled { opacity: 0.55; cursor: wait; }
+    #photoStatus {
+      position: fixed;
+      top: calc(max(1rem, env(safe-area-inset-top)) + 54px);
+      left: 50%;
+      z-index: 310;
+      transform: translateX(-50%);
+      max-width: min(90vw, 440px);
+      margin: 0;
+      padding: 7px 10px;
+      border-radius: 8px;
+      color: white;
+      background: rgba(0,0,0,0.72);
+      text-align: center;
+      font-size: 0.8rem;
+      pointer-events: none;
+    }
+    #photoStatus:empty { display: none; }
 
     /* ===== COSTUME SWITCHER ===== */
     .costume-bar {
@@ -428,13 +465,21 @@
   <!-- ===== AR CONTAINER ===== -->
   <div id="ar-container">
     <canvas id="backgroundCanvas" hidden></canvas>
-    <div class="background-picker" role="group" aria-label="背景の選択">
-      <span>背景</span>
-      <button data-background="none" aria-pressed="true">なし</button>
-      <button data-background="beach" aria-pressed="false">海</button>
-      <button data-background="stone" aria-pressed="false">石畳</button>
+    <details class="background-picker" open>
+      <summary>背景を選ぶ</summary>
+      <div class="background-options" role="group" aria-label="背景の選択">
+        <div class="background-row">
+          <button data-background="none" aria-pressed="true">なし</button>
+          <button data-background="beach" aria-pressed="false">海</button>
+          <button data-background="stone" aria-pressed="false">石畳</button>
+        </div>
+        <div class="background-row">
+          <button data-background="castle-before" aria-pressed="false">首里城（復元前）</button>
+          <button data-background="castle-after" aria-pressed="false">首里城（復元後）</button>
+        </div>
+      </div>
       <p id="backgroundStatus" role="status" aria-live="polite"></p>
-    </div>
+    </details>
 
     <!-- Loading -->
     <div class="loading-overlay" id="loadingOverlay">
@@ -459,6 +504,10 @@
 
     <!-- Info button -->
     <button class="info-btn" id="infoBtn">i</button>
+
+    <!-- Photo capture: controls and status are intentionally outside the saved canvas. -->
+    <button class="photo-btn" id="photoBtn" type="button" disabled>📷 撮影</button>
+    <p id="photoStatus" role="status" aria-live="polite"></p>
 
     <!-- Per-person assignment -->
     <div class="costume-bar" aria-label="人物ごとの衣装">
@@ -487,7 +536,7 @@
     <div class="desc-body" id="descBody"></div>
   </div>
 
-  <script src="background.js"></script>
+  <script src="background.js?v=20260920-2"></script>
   <script>
     // ===== COSTUME DATA =====
     const costumeData = {
@@ -561,6 +610,6 @@
     document.getElementById('closeDesc').addEventListener('click', () =>
       document.getElementById('descPanel').classList.remove('open'));
   </script>
-  <script type="module" src="multiface.mjs"></script>
+  <script type="module" src="multiface.mjs?v=20260920-2"></script>
 </body>
 </html>

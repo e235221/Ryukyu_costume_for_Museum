@@ -1,7 +1,12 @@
 // Local compositing; camera frames are processed on this device.
 (() => {
   const CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/';
-  const images = {beach: 'background_beach.jpg', stone: 'background_ishidatami.jpg'};
+  const images = {
+    beach: 'background_beach.jpg',
+    stone: 'background_ishidatami.jpg',
+    'castle-before': 'background_Shurijo_Castle_before.jpg',
+    'castle-after': 'background_Shurijo_Castle_after.jpg'
+  };
   let video, model, modelPromise, selected = 'none', background, timer, busy = false, generation = 0, job;
   const canvas = document.getElementById('backgroundCanvas');
   const context = canvas.getContext('2d');

@@ -17,7 +17,7 @@ const get=id=>{if(!nodes.has(id))nodes.set(id,new Element());return nodes.get(id
 const people=[0,1,2].map(i=>new Element({person:String(i)}));
 const outfits=['man','woman','none','bird'].map(costume=>new Element({costume}));
 const document={getElementById:get,querySelectorAll:s=>s==='[data-person]'?people:outfits,addEventListener(){}};
-const source=fs.readFileSync(new URL('./multiface.mjs',import.meta.url),'utf8').replace(/^import .*;\n/,'');
+const source=fs.readFileSync(new URL('./multiface.mjs',import.meta.url),'utf8').replace(/^import .*;\n/gm,'');
 const runtime=vm.createContext({document,window:{addEventListener(){}},FaceSlots,faceGeometry,console,performance:{now:()=>6000}});
 vm.runInContext(source,runtime);
 people[0].click();outfits[1].click();
