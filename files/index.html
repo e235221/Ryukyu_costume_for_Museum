@@ -450,6 +450,7 @@
     <div hidden>
       <img id="img-man" src="orion_man.png" alt="">
       <img id="img-woman" src="orion_woman.png" alt="">
+      <img id="img-bird" src="yanbarukuina.png" alt="">
     </div>
     <canvas id="costumeCanvas"></canvas>
 
@@ -467,11 +468,12 @@
         <button data-person="2" aria-pressed="false">人物3</button>
         <button id="resetPeople">番号を左から振り直す</button>
       </div>
-      <span id="assignmentLabel">人物1 の衣装</span>
+      <span id="assignmentLabel">人物1 の衣装・顔</span>
       <div role="group" aria-label="選択した人物の衣装">
         <button data-costume="man" aria-pressed="true">男性衣装</button>
         <button data-costume="woman" aria-pressed="false">女性衣装</button>
-        <button data-costume="none" aria-pressed="false">衣装なし</button>
+        <button data-costume="bird" aria-pressed="false">ヤンバルクイナ</button>
+        <button data-costume="none" aria-pressed="false">なし</button>
       </div>
     </div>
   </div>
@@ -546,7 +548,10 @@
     };
 
     window.showCostumeDescription = function(name) {
-      const data = costumeData[name];
+      const data = name === 'bird' ? {
+        name: 'ヤンバルクイナに変身',
+        sections: [{title: '顔の置き換え', text: '顔の位置・大きさ・傾きに合わせてヤンバルクイナの画像を重ねます。体や服はカメラ映像のままです。「なし」で元の顔に戻せます。'}]
+      } : costumeData[name];
       document.getElementById('descTitle').textContent = data.name;
       document.getElementById('descBody').innerHTML = data.sections.map(s =>
         '<div class="desc-section"><h3>' + s.title + '</h3><p>' + s.text + '</p></div>'

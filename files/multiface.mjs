@@ -3,7 +3,7 @@ const $=id=>document.getElementById(id);
 const container=$('ar-container'),canvas=$('costumeCanvas'),ctx=canvas.getContext('2d');
 const status=$('arStatus'),loading=$('loadingOverlay'),start=$('startBtn');
 const slots=new FaceSlots(3), outfits=['man','woman','man'];
-const images={man:$('img-man'),woman:$('img-woman')};
+const images={man:$('img-man'),woman:$('img-woman'),bird:$('img-bird')};
 let selected=0,video=null,stream=null,model=null,modelPromise,epoch=0,raf=0,lastTime=-1,lastFrame=0;
 const people=[...document.querySelectorAll('[data-person]')];
 const clothing=[...document.querySelectorAll('[data-costume]')];
@@ -16,7 +16,7 @@ if (window.ResizeObserver) {
 function refresh() {
   people.forEach((b,i)=>{b.setAttribute('aria-pressed',String(i===selected));b.textContent=`人物${i+1}${slots.slots[i].visible?' ✓':'（未検出）'}`;});
   clothing.forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.costume===outfits[selected])));
-  $('assignmentLabel').textContent=`人物${selected+1} の衣装`;
+  $('assignmentLabel').textContent=`人物${selected+1} の衣装・顔`;
 }
 people.forEach(b=>b.addEventListener('click',()=>{selected=Number(b.dataset.person);refresh();}));
 clothing.forEach(b=>b.addEventListener('click',()=>{outfits[selected]=b.dataset.costume;refresh();draw();}));
@@ -49,7 +49,17 @@ function draw() {
     const f=slot.face,c=project(f),top=project(f.top),bottom=project(f.bottom),left=project(f.left),right=project(f.right);
     const a=project(f.eyes[0]),b=project(f.eyes[1]),angle=Math.atan2(b.y-a.y,b.x-a.x);
     const kind=outfits[slot.id];
-    if(kind!=='none') {
+    if(kind==='bird') {
+      // Fit the opaque head, not the transparent margins of the 1254px PNG.
+      // Extra coverage prevents the human cheeks/forehead showing around it.
+      const factor=Math.max(
+        Math.hypot(left.x-right.x,left.y-right.y)*1.35/1136,
+        Math.hypot(top.x-bottom.x,top.y-bottom.y)*1.25/1049
+      );
+      ctx.save();ctx.translate(c.x,c.y);ctx.rotate(angle);
+      ctx.drawImage(images.bird,-626*factor,-623.5*factor,1254*factor,1254*factor);
+      ctx.restore();
+    } else if(kind!=='none') {
       const hole=kind==='man'?{x:338.5,y:228.5,w:65,h:79}:{x:344,y:277,w:62,h:76};
       const factor=Math.max(Math.hypot(left.x-right.x,left.y-right.y)/hole.w,Math.hypot(top.x-bottom.x,top.y-bottom.y)/hole.h);
       ctx.save();ctx.translate(c.x,c.y);ctx.rotate(angle);
