@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {composePhoto,drawCover,photoFilename} from './photo-capture.mjs';
+import {composePhoto,drawCover,photoFilename} from '../assets/js/photo-capture.mjs';
 
 const operations=[];
 const context={

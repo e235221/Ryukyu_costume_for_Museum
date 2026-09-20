@@ -85,28 +85,30 @@ CDNからMediaPipeのJavaScript、WASM、学習済みモデルを読み込みま
 博物館AR/
 ├── ARを起動.command               # macOS用ローカル起動スクリプト
 └── files/
-    ├── index.html                 # 画面、操作UI、キャプション
-    ├── multiface.mjs              # カメラ、顔検出、人物別割当、衣装描画
-    ├── face-slots.mjs             # 人物番号の追跡
-    ├── background.js              # 人物切り抜きと背景合成
-    ├── photo-capture.mjs          # 撮影用レイヤー合成
-    ├── orion_man.png              # 男性の琉装
-    ├── orion_woman.png            # 女性の琉装
-    ├── yanbarukuina.png           # ヤンバルクイナの頭部
-    ├── background_beach.jpg       # 海
-    ├── background_ishidatami.jpg  # 石畳
-    ├── background_Shurijo_Castle_before.jpg
-    ├── background_Shurijo_Castle_after.jpg
-    ├── check-multiface.mjs        # 顔追跡テスト
-    ├── check-assignments.mjs      # 人物別割当・無効化テスト
-    ├── check-background.cjs       # 背景テスト
-    ├── check-photo-capture.mjs    # 撮影合成テスト
-    ├── check-caption.cjs          # キャプション表示テスト
+    ├── index.html                 # 画面構造と操作UI
+    ├── assets/
+    │   ├── css/
+    │   │   └── app.css            # 画面全体のスタイル
+    │   ├── js/
+    │   │   ├── multiface.mjs      # カメラ、顔検出、人物別割当、衣装描画
+    │   │   ├── face-slots.mjs     # 人物番号の追跡
+    │   │   ├── background.js      # 人物切り抜きと背景合成
+    │   │   ├── photo-capture.mjs  # 撮影用レイヤー合成
+    │   │   └── caption-panel.mjs  # 解説データ、Markdown表示、文字サイズ
+    │   └── images/
+    │       ├── costumes/          # 男性・女性の琉装PNG
+    │       ├── face-overlays/     # ヤンバルクイナPNG
+    │       └── backgrounds/       # 海・石畳・首里城の背景
+    ├── tests/                     # Node.jsによる自動テスト
+    ├── reference/
+    │   ├── generated/             # 生成画像などの参考素材
+    │   ├── originals/             # 加工前・比較用画像
+    │   └── legacy/                # 現行アプリで未使用の旧実装
     ├── README.md
     └── LOG.md
 ```
 
-`AI-generated image/`、`figure_original/`、`*_origin.png`、webloc、`costume-fit.js`は参考・旧実装用で、現行アプリの実行には使用しません。
+ブラウザが読み込むファイルは`assets/`、検査コードは`tests/`、現行アプリで使用しない素材と旧実装は`reference/`に分けています。新しい画像を追加する場合も、用途に対応する`assets/images/`配下へ配置してください。
 
 ```mermaid
 flowchart LR
@@ -138,6 +140,8 @@ flowchart LR
 
 macOSでは、プロジェクト直下の`ARを起動.command`をダブルクリックします。
 
+起動後に表示されるターミナルは、ARを利用している間は閉じないでください。ターミナルを閉じるか`Control + C`を押すとローカルサーバーが停止し、`http://127.0.0.1:8000/`へ接続できなくなります。
+
 ターミナルから起動する場合は、プロジェクト直下で次を実行します。
 
 ```sh
@@ -157,11 +161,11 @@ http://127.0.0.1:8000/
 プロジェクト直下で実行します。
 
 ```sh
-node files/check-multiface.mjs
-node files/check-assignments.mjs
-node files/check-background.cjs
-node files/check-photo-capture.mjs
-node files/check-caption.cjs
+node files/tests/check-multiface.mjs
+node files/tests/check-assignments.mjs
+node files/tests/check-background.cjs
+node files/tests/check-photo-capture.mjs
+node files/tests/check-caption.mjs
 ```
 
 テストは追跡、人物別割当、未検出ボタンの無効化、背景切替、撮影レイヤー、Markdownキャプションを検査します。顔入力、DOM、Canvas、背景モデルの一部は模擬値であり、実カメラの精度・性能を保証するものではありません。
@@ -189,17 +193,20 @@ node files/check-caption.cjs
 
 ### 画像の配置と調整
 
+- 衣装画像は`assets/images/costumes/`へ配置します。
+- 顔を覆う画像は`assets/images/face-overlays/`へ配置します。
+- 背景画像は`assets/images/backgrounds/`へ配置します。
 - 男性画像は2732×4096、女性画像は1366×2048のRGBA PNGです。
 - 描画時は683×1024相当に縮小します。
 - 男性の顔穴は旧683×1024基準で`(306,189)〜(371,268)`、女性は`(313,239)〜(375,315)`です。
 - ヤンバルクイナは1254×1254で、頭部範囲`(58,99)〜(1194,1148)`を基準にします。
-- 画像を交換した場合は、`multiface.mjs`内の顔穴・頭部座標も調整してください。
+- 画像を交換した場合は、`assets/js/multiface.mjs`内の顔穴・頭部座標も調整してください。
 
 ### キャッシュ更新
 
 画像やJavaScriptを変更したのに表示が変わらない場合は、Macで`Command + Shift + R`を押して強制再読み込みします。必要に応じてブラウザのサイトデータを削除してください。
 
-`background.js`と`multiface.mjs`を更新した場合は、`index.html`の読込URLにある`?v=`も変更し、旧JavaScriptが再利用されないようにします。
+`assets/css/app.css`、`assets/js/background.js`、`assets/js/caption-panel.mjs`、`assets/js/multiface.mjs`を更新した場合は、`index.html`の読込URLにある`?v=`も変更し、旧ファイルが再利用されないようにします。
 
 
 ### 文献・画像利用について

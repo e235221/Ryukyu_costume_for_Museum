@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {FaceSlots,faceGeometry} from './face-slots.mjs';
+import {FaceSlots,faceGeometry} from '../assets/js/face-slots.mjs';
 const face=(x,y=.4)=>({x,y,size:.1});
 const tracker=new FaceSlots(3);
 let slots=tracker.update([face(.8),face(.2),face(.5)],0);

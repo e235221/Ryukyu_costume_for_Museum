@@ -4,483 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>琉球衣装AR体験</title>
-
-
-
-  <style>
-    :root {
-      --primary: #8B1A1A;
-      --primary-light: #C44D4D;
-      --gold: #C8A951;
-      --dark: #1a1a1a;
-      --text: #f0e6d3;
-      --panel-bg: rgba(26, 26, 26, 0.94);
-    }
-
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-
-    body {
-      font-family: "Hiragino Kaku Gothic ProN", "Yu Gothic", "Noto Sans JP", sans-serif;
-      background: var(--dark);
-      color: var(--text);
-      overflow-x: hidden;
-      -webkit-tap-highlight-color: transparent;
-    }
-
-    /* ===== LANDING PAGE ===== */
-    #landing {
-      min-height: 100dvh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      padding: 2rem 1.5rem;
-      text-align: center;
-      background:
-        radial-gradient(ellipse at 30% 20%, rgba(139,26,26,0.25) 0%, transparent 60%),
-        radial-gradient(ellipse at 70% 80%, rgba(200,169,81,0.15) 0%, transparent 50%),
-        var(--dark);
-    }
-
-    #landing h1 {
-      font-size: 1.8rem;
-      font-weight: 700;
-      letter-spacing: 0.15em;
-      margin-bottom: 0.5rem;
-      background: linear-gradient(135deg, var(--gold), #e8d9a0);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    #landing .subtitle {
-      font-size: 0.85rem;
-      color: rgba(240,230,211,0.6);
-      margin-bottom: 2rem;
-      letter-spacing: 0.08em;
-    }
-
-    .landing-desc {
-      font-size: 0.95rem;
-      line-height: 1.8;
-      max-width: 360px;
-      margin-bottom: 2.5rem;
-      color: rgba(240,230,211,0.85);
-    }
-
-    .start-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 1rem 2.5rem;
-      font-size: 1.1rem;
-      font-weight: 600;
-      color: #fff;
-      background: linear-gradient(135deg, var(--primary), var(--primary-light));
-      border: 2px solid var(--gold);
-      border-radius: 60px;
-      cursor: pointer;
-      letter-spacing: 0.1em;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .start-btn:active {
-      transform: scale(0.96);
-    }
-
-    .start-btn svg {
-      width: 20px;
-      height: 20px;
-    }
-
-    .notice {
-      margin-top: 1.5rem;
-      font-size: 0.75rem;
-      color: rgba(240,230,211,0.4);
-      max-width: 300px;
-    }
-
-    /* ===== AR SCENE ===== */
-    #ar-container {
-      display: none;
-      position: fixed;
-      inset: 0;
-      z-index: 10;
-      overflow: hidden;
-      isolation: isolate;
-      background: #000;
-    }
-
-    #ar-container.active {
-      display: block;
-    }
-
-    a-scene {
-      position: absolute;
-      z-index: 2;
-      width: 100%;
-      height: 100%;
-    }
-
-    #ar-container > video { z-index: 0 !important; }
-    #backgroundCanvas { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; pointer-events: none; }
-    .background-picker { position: absolute; top: 75px; right: 12px; z-index: 120; max-width: min(92vw, 390px); background: #111c; padding: 8px; border-radius: 12px; }
-    .background-picker summary { cursor: pointer; font-weight: 700; list-style-position: inside; user-select: none; }
-    .background-options { display: grid; gap: 6px; margin-top: 8px; }
-    .background-row { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
-    .background-picker button { padding: 9px 12px; color: white; background: #333; border: 1px solid #777; border-radius: 8px; cursor: pointer; }
-    .background-picker button[aria-pressed="true"] { background: #8B1A1A; border-color: #C8A951; }
-    #backgroundStatus { max-width: 260px; font-size: 12px; margin-top: 4px; }
-    #arStatus { position: absolute; bottom: calc(var(--controls-height, 150px) + 12px); right: 1rem; max-width: min(80vw, 440px); z-index: 110; text-align: right; pointer-events: none; font-size: 0.8rem; padding: 6px 10px; border-radius: 8px; background: #111b; }
-    #arStatus:empty { display: none; }
-    #backBtn { z-index: 310; }
-
-    .photo-btn {
-      position: fixed;
-      top: max(1rem, env(safe-area-inset-top));
-      left: 50%;
-      z-index: 310;
-      transform: translateX(-50%);
-      min-height: 44px;
-      padding: 0.65rem 1rem;
-      border: 1.5px solid rgba(255,255,255,0.35);
-      border-radius: 999px;
-      color: white;
-      background: rgba(139,26,26,0.9);
-      font-weight: 700;
-      cursor: pointer;
-    }
-    .photo-btn:disabled { opacity: 0.55; cursor: wait; }
-    #photoStatus {
-      position: fixed;
-      top: calc(max(1rem, env(safe-area-inset-top)) + 54px);
-      left: 50%;
-      z-index: 310;
-      transform: translateX(-50%);
-      max-width: min(90vw, 440px);
-      margin: 0;
-      padding: 7px 10px;
-      border-radius: 8px;
-      color: white;
-      background: rgba(0,0,0,0.72);
-      text-align: center;
-      font-size: 0.8rem;
-      pointer-events: none;
-    }
-    #photoStatus:empty { display: none; }
-
-    /* ===== COSTUME SWITCHER ===== */
-    .costume-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      display: flex;
-      justify-content: center;
-      gap: 0.5rem;
-      padding: 1rem 0.75rem;
-      padding-bottom: max(1rem, env(safe-area-inset-bottom));
-      background: linear-gradient(to top, rgba(0,0,0,0.85) 60%, transparent);
-    }
-
-    .costume-btn {
-      flex: 1;
-      max-width: 130px;
-      padding: 0.65rem 0.5rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: rgba(255,255,255,0.7);
-      background: rgba(255,255,255,0.1);
-      border: 1.5px solid rgba(255,255,255,0.2);
-      border-radius: 12px;
-      cursor: pointer;
-      transition: all 0.25s;
-      text-align: center;
-      letter-spacing: 0.05em;
-    }
-
-    .costume-btn.active {
-      color: #fff;
-      background: var(--primary);
-      border-color: var(--gold);
-      box-shadow: 0 0 12px rgba(139,26,26,0.5);
-    }
-
-    .costume-btn .icon {
-      display: block;
-      font-size: 1.3rem;
-      margin-bottom: 0.2rem;
-    }
-
-    /* ===== INFO BUTTON ===== */
-    .info-btn {
-      position: fixed;
-      top: max(1rem, env(safe-area-inset-top));
-      right: 1rem;
-      z-index: 100;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(8px);
-      border: 1.5px solid rgba(255,255,255,0.2);
-      border-radius: 50%;
-      color: white;
-      font-size: 1.2rem;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .back-btn {
-      position: fixed;
-      top: max(1rem, env(safe-area-inset-top));
-      left: 1rem;
-      z-index: 100;
-      width: 44px;
-      height: 44px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0,0,0,0.5);
-      backdrop-filter: blur(8px);
-      border: 1.5px solid rgba(255,255,255,0.2);
-      border-radius: 50%;
-      color: white;
-      font-size: 1.1rem;
-      cursor: pointer;
-    }
-
-    /* ===== DESCRIPTION PANEL ===== */
-    .desc-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 200;
-      display: none;
-      flex-direction: column;
-      background: var(--panel-bg);
-      backdrop-filter: blur(16px);
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-    }
-
-    .desc-overlay.open {
-      display: flex;
-    }
-
-    .desc-header {
-      position: sticky;
-      top: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1rem 1.2rem;
-      padding-top: max(1rem, env(safe-area-inset-top));
-      background: rgba(26,26,26,0.95);
-      border-bottom: 1px solid rgba(200,169,81,0.2);
-      z-index: 1;
-    }
-
-    .desc-header h2 {
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--gold);
-      letter-spacing: 0.08em;
-    }
-
-    .close-btn {
-      width: 36px;
-      height: 36px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(255,255,255,0.08);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 50%;
-      color: white;
-      font-size: 1.2rem;
-      cursor: pointer;
-    }
-
-    .desc-body {
-      padding: 1.5rem 1.2rem;
-      padding-bottom: max(2rem, env(safe-area-inset-bottom));
-    }
-
-    .caption-toolbar {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      padding: 0.75rem 1.2rem;
-      color: rgba(240,230,211,0.9);
-      background: rgba(26,26,26,0.92);
-      border-bottom: 1px solid rgba(200,169,81,0.16);
-      font-size: 0.82rem;
-    }
-
-    .caption-toolbar label { flex: 0 0 auto; font-weight: 600; }
-    .caption-toolbar input[type="range"] { flex: 1 1 150px; min-width: 90px; accent-color: var(--gold); }
-    .caption-toolbar output { flex: 0 0 3.4rem; text-align: right; font-variant-numeric: tabular-nums; }
-
-    .desc-section {
-      margin-bottom: 1.5rem;
-    }
-
-    .desc-section h3 {
-      font-size: 0.85em;
-      font-weight: 600;
-      color: var(--gold);
-      margin-bottom: 0.5rem;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      opacity: 0.8;
-    }
-
-    .desc-section p {
-      font-size: 0.95em;
-      line-height: 1.8;
-      color: rgba(240,230,211,0.9);
-    }
-
-    .desc-markdown h2 {
-      margin: 0 0 1.2rem;
-      color: var(--gold);
-      font-size: 1.35em;
-      line-height: 1.5;
-    }
-
-    .desc-markdown h3 {
-      margin: 2rem 0 0.75rem;
-      color: var(--gold);
-      font-size: 1em;
-      line-height: 1.6;
-    }
-
-    .desc-markdown p {
-      margin: 0 0 1rem;
-      color: rgba(240,230,211,0.9);
-      font-size: 0.95em;
-      line-height: 1.9;
-    }
-
-    .desc-markdown a { color: #f0d77a; text-decoration: underline; }
-
-    .compare-box {
-      margin-top: 0.8rem;
-      padding: 1rem;
-      background: rgba(200,169,81,0.08);
-      border-left: 3px solid var(--gold);
-      border-radius: 0 8px 8px 0;
-    }
-
-    .compare-box p {
-      font-size: 0.88rem;
-      line-height: 1.7;
-    }
-
-    /* ===== LOADING ===== */
-    .loading-overlay {
-      position: fixed;
-      inset: 0;
-      z-index: 300;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: var(--dark);
-    }
-
-    .loading-overlay.hidden { display: none; }
-
-    .loading-spinner {
-      width: 48px;
-      height: 48px;
-      border: 3px solid rgba(200,169,81,0.2);
-      border-top-color: var(--gold);
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-
-    .loading-text {
-      margin-top: 1.2rem;
-      font-size: 0.9rem;
-      color: rgba(240,230,211,0.6);
-      letter-spacing: 0.05em;
-    }
-
-    @keyframes spin { to { transform: rotate(360deg); } }
-
-    /* ===== FACE GUIDE ===== */
-    .face-guide {
-      position: fixed;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -60%);
-      z-index: 90;
-      width: 160px;
-      height: 200px;
-      border: 2px dashed rgba(255,255,255,0.35);
-      border-radius: 50%;
-      pointer-events: none;
-      transition: opacity 0.5s;
-    }
-
-    .face-guide-text {
-      position: fixed;
-      top: calc(50% + 80px);
-      left: 50%;
-      transform: translateX(-50%);
-      z-index: 90;
-      font-size: 0.8rem;
-      color: rgba(255,255,255,0.5);
-      white-space: nowrap;
-      pointer-events: none;
-    }
-
-    .face-guide.hidden,
-    .face-guide-text.hidden {
-      opacity: 0;
-    }
-
-    /* ===== CALIBRATION CONTROLS (prototype debug) ===== */
-    .calibration {
-      position: fixed;
-      top: max(4rem, calc(env(safe-area-inset-top) + 3.5rem));
-      left: 0.5rem;
-      z-index: 150;
-      background: rgba(0,0,0,0.6);
-      padding: 0.5rem;
-      border-radius: 8px;
-      font-size: 0.65rem;
-      color: white;
-      display: none;
-    }
-
-    .calibration.show { display: block; }
-
-    .calibration label {
-      display: block;
-      margin: 0.2rem 0;
-    }
-
-    .calibration input[type="range"] {
-      width: 100px;
-      vertical-align: middle;
-    }
-    #costumeCanvas { position:absolute; inset:0; width:100%; height:100%; z-index:2; pointer-events:none; }
-    .costume-bar { flex-direction:column; align-items:center; gap:6px; }
-    .costume-bar button { padding:9px 12px; border:1px solid #aaa; border-radius:8px; color:white; background:#333; cursor:pointer; }
-    .costume-bar button[aria-pressed="true"] { background:#8b1a1a; border-color:#C8A951; }
-    .costume-bar button:disabled { color:#aaa; background:#555; border-color:#777; opacity:0.48; cursor:not-allowed; }
-    .person-picker { display:flex; flex-wrap:wrap; justify-content:center; gap:4px; }
-    #faceGuide, #faceGuideText { display:none; }
-  </style>
+  <link rel="stylesheet" href="assets/css/app.css?v=20260921-1">
 </head>
 <body>
-
-  <!-- ===== LANDING PAGE ===== -->
-  <div id="landing">
+  <main id="landing">
     <h1>琉球衣装AR体験</h1>
     <p class="subtitle">Ryukyu Costume AR Experience</p>
     <p class="landing-desc">
@@ -488,8 +15,8 @@
       カメラに顔を映すと、男性・女性の琉球衣装を着た姿を楽しめる。
       衣装の生地や時代背景の解説も確認できる。
     </p>
-    <button class="start-btn" id="startBtn">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <button class="start-btn" id="startBtn" type="button">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
         <circle cx="12" cy="13" r="4"/>
       </svg>
@@ -499,78 +26,67 @@
       ※ カメラへのアクセス許可が必要である。<br>
       ※ スマートフォンの縦向きでの利用を推奨する。
     </p>
-  </div>
+  </main>
 
-  <!-- ===== AR CONTAINER ===== -->
-  <div id="ar-container">
+  <section id="ar-container" aria-label="AR体験画面">
     <canvas id="backgroundCanvas" hidden></canvas>
+
     <details class="background-picker" open>
       <summary>背景を選ぶ</summary>
       <div class="background-options" role="group" aria-label="背景の選択">
         <div class="background-row">
-          <button data-background="none" aria-pressed="true">なし</button>
-          <button data-background="beach" aria-pressed="false">海</button>
-          <button data-background="stone" aria-pressed="false">石畳</button>
+          <button type="button" data-background="none" aria-pressed="true">なし</button>
+          <button type="button" data-background="beach" aria-pressed="false">海</button>
+          <button type="button" data-background="stone" aria-pressed="false">石畳</button>
         </div>
         <div class="background-row">
-          <button data-background="castle-before" aria-pressed="false">首里城（復元前）</button>
-          <button data-background="castle-after" aria-pressed="false">首里城（復元後）</button>
+          <button type="button" data-background="castle-before" aria-pressed="false">首里城（復元前）</button>
+          <button type="button" data-background="castle-after" aria-pressed="false">首里城（復元後）</button>
         </div>
       </div>
       <p id="backgroundStatus" role="status" aria-live="polite"></p>
     </details>
 
-    <!-- Loading -->
     <div class="loading-overlay" id="loadingOverlay">
-      <div class="loading-spinner"></div>
+      <div class="loading-spinner" aria-hidden="true"></div>
       <p class="loading-text">カメラを起動中...</p>
     </div>
 
-    <!-- Face guide -->
     <p id="arStatus" role="status" aria-live="polite"></p>
-    <div class="face-guide" id="faceGuide"></div>
-    <p class="face-guide-text" id="faceGuideText">顔をこの枠に合わせてください</p>
 
     <div hidden>
-      <img id="img-man" src="orion_man.png" alt="">
-      <img id="img-woman" src="orion_woman.png" alt="">
-      <img id="img-bird" src="yanbarukuina.png" alt="">
+      <img id="img-man" src="assets/images/costumes/orion-man.png" alt="">
+      <img id="img-woman" src="assets/images/costumes/orion-woman.png" alt="">
+      <img id="img-bird" src="assets/images/face-overlays/yanbaru-kuina.png" alt="">
     </div>
     <canvas id="costumeCanvas"></canvas>
 
-    <!-- Back button -->
-    <button class="back-btn" id="backBtn">←</button>
-
-    <!-- Info button -->
-    <button class="info-btn" id="infoBtn">i</button>
-
-    <!-- Photo capture: controls and status are intentionally outside the saved canvas. -->
+    <button class="back-btn" id="backBtn" type="button" aria-label="AR体験を終了">←</button>
+    <button class="info-btn" id="infoBtn" type="button" aria-label="解説を表示">i</button>
     <button class="photo-btn" id="photoBtn" type="button" disabled>📷 撮影</button>
     <p id="photoStatus" role="status" aria-live="polite"></p>
 
-    <!-- Per-person assignment -->
     <div class="costume-bar" aria-label="人物ごとの衣装">
       <div class="person-picker" role="group" aria-label="衣装を変更する人物">
-        <button data-person="0" aria-pressed="true">人物1</button>
-        <button data-person="1" aria-pressed="false">人物2</button>
-        <button data-person="2" aria-pressed="false">人物3</button>
-        <button id="resetPeople">番号を左から振り直す</button>
+        <button type="button" data-person="0" aria-pressed="true">人物1</button>
+        <button type="button" data-person="1" aria-pressed="false">人物2</button>
+        <button type="button" data-person="2" aria-pressed="false">人物3</button>
+        <button type="button" id="resetPeople">番号を左から振り直す</button>
       </div>
       <span id="assignmentLabel">人物1 の衣装・顔</span>
-      <div role="group" aria-label="選択した人物の衣装">
-        <button data-costume="man" aria-pressed="true">男性の琉装</button>
-        <button data-costume="woman" aria-pressed="false">女性の琉装</button>
-        <button data-costume="bird" aria-pressed="false">ヤンバルクイナ</button>
-        <button data-costume="none" aria-pressed="false">なし</button>
+      <div class="outfit-picker" role="group" aria-label="選択した人物の衣装">
+        <button type="button" data-costume="man" aria-pressed="true">男性の琉装</button>
+        <button type="button" data-costume="woman" aria-pressed="false">女性の琉装</button>
+        <button type="button" data-costume="bird" aria-pressed="false">ヤンバルクイナ</button>
+        <button type="button" data-costume="none" aria-pressed="false">なし</button>
       </div>
     </div>
-  </div>
+  </section>
 
-  <!-- ===== DESCRIPTION PANEL ===== -->
-  <div class="desc-overlay" id="descPanel">
+  <aside class="desc-overlay" id="descPanel" aria-label="展示解説">
     <div class="desc-header">
       <h2 id="descTitle">衣装解説</h2>
-      <button class="close-btn" id="closeDesc">✕</button>
+      <button class="close-btn" id="closeDesc" type="button" aria-label="解説を閉じる">✕</button>
     </div>
     <div class="caption-toolbar">
       <label for="captionFontSize">文字サイズ</label>
@@ -578,186 +94,10 @@
       <output id="captionFontSizeValue" for="captionFontSize">100%</output>
     </div>
     <div class="desc-body" id="descBody"></div>
-  </div>
-
-  <script src="background.js?v=20260920-2"></script>
-  <script>
-    // ===== COSTUME DATA =====
-    const ryusoMarkdown = `## 琉球の装い　琉装
-
-色あざやかな布，大きく開いた袖，ゆったりとした形。
-
-琉装（りゅうそう）は，琉球王国の時代に育まれた沖縄の伝統的な装いです。沖縄のことばでは，ウチナースガイともよばれています。
-
-琉球王国は，中国や日本をはじめ，海の向こうのさまざまな地域と交流していました。そうした交流の中で取り入れられた文化や技術と，沖縄の気候や暮らしが結びつき，琉球ならではの装いが生まれていきました。
-
-### 暑い沖縄で過ごすための工夫
-
-琉装をよく見ると，袖が広く，全体がゆったりと作られていることがわかります。
-
-この形は，暑く湿気（しっけ）の多い沖縄で，少しでも風を通しやすくするための工夫のひとつです。また，袖口から内側が見えるため，表の布だけでなく，内側の色にも気が配られています。
-
-見た目の美しさだけでなく，沖縄の気候に合わせた工夫がかくされているのです。
-
-### 女性の着方　ウシンチー
-
-女性の琉装には，ウシンチーとよばれる着方があります。
-
-日本本土の着物のように太い帯を腰に巻くのではなく，腰につけた細いひもに，衣服の一部をはさんで形を整えます。
-
-腰のまわりを強くしめつけないため，ゆったりと着ることができます。
-
-衣装を見るときは，腰のまわりがどのようになっているかにも注目してみてください。
-
-### 男性の着方
-
-男性は，腰のあたりを帯で固定し，帯の結び目を前にします。
-
-また，男性が頭につけるかぶりものに，ハチマチがあります。ハチマチにはいくつかの色があり，その色によって位の違いを表していました。
-
-衣服だけでなく，頭の装いもその人の立場を表す大切なものでした。
-
-### 服を見れば，身分もわかった？
-
-琉球王国では，身分（みぶん）や位（くらい）によって，着ることのできる服の色や模様，布の種類などに違いがありました。
-
-服は，体をおおうためだけのものではありません。その人がどのような立場なのかを表す役割も持っていました。
-
-男性が頭につけるハチマチもそのひとつです。ハチマチにはいくつかの色があり，位によって使える色が決められていました。
-
-昔の人びとは，服や頭の装いを見ることで，その人の立場を知ることができたのです。
-
-### 華やかな琉装は，だれでも着られた？
-
-ここで，衣装をもう一度見てみましょう。
-
-あざやかな色，大きな模様，美しい絹の布。昔の琉球の人びとは，みんなこのような服を着ていたのでしょうか。
-
-じつは，そうではありません。
-
-琉球王国では，王族や士族，庶民などの身分があり，身分や位によって着ることのできる服に決まりがありました。とくに，紅型の色や模様の大きさ，衣服に使う布などには違いがありました。
-
-士族であれば，だれでも王族と同じ衣装を着ることができたわけではありません。大きく華やかな模様などは，王族をはじめとする限られた身分の人に許されたものでした。
-
-また，庶民も，王族や位の高い士族と同じような上質な絹（きぬ）や華（はな）やかな模様（もよう）を，自由に使うことはできませんでした。
-
-つまり，現在まで伝わっている華やかな琉装の中には，王族や位の高い人びとが身につけた特別な衣装も多くあります。
-
-では，この衣装はどのような人が着たのでしょうか。
-
-色や模様，布の種類にも注目すると，衣装から昔の社会のようすが見えてきます。
-
-### 沖縄ならではの染めと織り
-
-琉装を美しく彩るのが，沖縄各地で作られてきた染物や織物です。
-
-代表的なものに，色あざやかな紅型（びんがた）があります。そのほかにも，首里織（しゅりおり），久米島紬（くめじまつむぎ），宮古上布（みやこじょうふ），八重山上布（やえやまじょうふ），芭蕉布（ばしょうふ）などがあります。
-
-使う材料や作り方は，島や地域によってさまざまです。
-
-同じ沖縄の中でも，土地によって違った染めや織りの文化が育ってきました。
-
-もっと知りたい方は[こちら（KOGEI JAPAN）](https://kogeijapan.com/locale/ja_JP/list/?category=1&pref=47)
-
-### 髪型も大切な装い
-
-衣服だけでなく，髪型も琉装の大切な一部です。
-
-女性の伝統的な髪型のひとつに，ウチナーカンプーがあります。長い髪をまとめて結い上げ，大きく美しい形を作ります。
-
-服，髪型，頭につけるものまで合わせて，全体の姿が作られていました。
-
-## 歴史
-
-むかし，今の沖縄県が琉球という国だったころのお話です。琉球は，日本の薩摩藩（さつまはん）とつながりを持ちながら，中国とも深い交流を続けていました。
-
-そのため，琉球の装いには，中国や日本など，海の向こうから伝わったさまざまな文化の影響が見られます。それらをそのまま取り入れるのではなく，沖縄の気候や暮らしに合わせながら，琉球独自の服の文化が育っていきました。
-
-琉球王国ができるより前の人びとの服については，くわしい記録があまり残っていません。そのため，どのような服を着ていたのか，わかっていないこともあります。
-
-15世紀から16世紀ごろには，中国の明（みん）から伝わった衣服や制度の影響も受けていました。その後，中国では明にかわって清（しん）が成立し，琉球をとりまく社会も大きく変わっていきました。
-
-1609年には薩摩藩が琉球へ侵攻しました。その後も琉球王国は続き，中国との交流を保ちながら，日本からもさまざまな品物や文化が入ってくるようになります。
-
-こうした長い交流の中で，琉球独自の衣服の形や着方がしだいに整えられていきました。
-
-17世紀の後半になると，士族と庶民などの身分の違いが，それまでよりはっきりと制度に表れるようになります。さらに18世紀には，役人の位や王府の制度が細かく整えられていきました。
-
-そして1857年には，王府から衣服定（いふくさだめ）が出されました。そこでは，身分に応じた衣服などについて決まりが定められています。
-
-服装は，好きな色や模様を自由に選ぶだけのものではありませんでした。身分や位によって，どのような布や模様を使うことができるのかにも違いがあったのです。
-
-とくに紅型では，士族以上の人びとが着ることができ，その中でも大きく華やかな模様などは，王族のような限られた身分の人びとに許されていました。
-
-現在見かけるような華やかな琉装を見たときには，その美しさだけでなく，だれがこの服を着ることができたのだろう，というところにも注目してみてください。
-
-一着の衣装から，琉球王国の文化だけでなく，当時の社会のしくみも読み取ることができるのです。`;
-
-    const ryusoCaption = {name: '琉球の装い　琉装', markdown: ryusoMarkdown};
-    const yanbaruMarkdown = `### 飛べない鳥が，森を走る。
-
-ヤンバルクイナには翼があります。しかし，空を飛ぶことはほとんどできません。
-
-では，なぜ鳥なのに飛ばないのでしょうか。
-ヤンバルクイナが暮らしてきたやんばるの森には，もともと地上で生活する鳥をおびやかす天敵(てんてき)が少なく，飛んで逃げる必要があまりありませんでした。長い時間をかけて森の地面での暮らしに適応し，今では落ち葉の間を歩きながら，昆虫やミミズ，カタツムリなどを探して食べています。
-
-そして，この鳥に出会える場所は，世界中を探してもほとんどありません。ヤンバルクイナは，**沖縄島北部だけに生息する固有種(こゆうしゅ)**です。1981年に新しい鳥の種として発表されました。人の暮らす地域のすぐ近くに，それまで科学的に知られていなかった鳥が生きていたのです。
-
-しかし，地面を走って暮らすことは，大きな弱点にもなりました。人によって持ち込まれたマングースやネコなどによる捕食(ほしょく)，道路での交通事故，森林環境の変化などによって，ヤンバルクイナは生存をおびやかされてきました。現在も，生息地を守る活動や外来生物への対策など，さまざまな保全活動(ほぜんかつどう)が続けられています。
-
-もし，やんばるの森を訪れることがあれば，少しだけ耳を澄ませてみてください。姿は見えなくても，森の奥から鋭い鳴き声が聞こえてくるかもしれません。`;
-    const costumeData = {
-      man: ryusoCaption,
-      woman: ryusoCaption,
-      bird: {name: 'ヤンバルクイナに変身', markdown: yanbaruMarkdown}
-    };
-
-    function escapeHtml(value) {
-      return value.replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[character]));
-    }
-
-    function renderInlineMarkdown(value) {
-      const pattern = /\[([^\]]+)\]\((https:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*/g;
-      let html = '', lastIndex = 0, match;
-      while ((match = pattern.exec(value))) {
-        html += escapeHtml(value.slice(lastIndex, match.index));
-        html += match[3]
-          ? `<strong>${escapeHtml(match[3])}</strong>`
-          : `<a href="${escapeHtml(match[2])}" target="_blank" rel="noopener noreferrer">${escapeHtml(match[1])}</a>`;
-        lastIndex = pattern.lastIndex;
-      }
-      return html + escapeHtml(value.slice(lastIndex));
-    }
-
-    function renderMarkdown(markdown) {
-      return '<div class="desc-markdown">' + markdown.trim().split(/\n\s*\n/).map(block => {
-        if (block.startsWith('### ')) return `<h3>${escapeHtml(block.slice(4))}</h3>`;
-        if (block.startsWith('## ')) return `<h2>${escapeHtml(block.slice(3))}</h2>`;
-        return `<p>${renderInlineMarkdown(block.replace(/\n/g, ' '))}</p>`;
-      }).join('') + '</div>';
-    }
-
-    const captionFontSize = document.getElementById('captionFontSize');
-    const captionFontSizeValue = document.getElementById('captionFontSizeValue');
-    const captionBody = document.getElementById('descBody');
-    function applyCaptionFontSize(value) {
-      const percent = Math.min(160, Math.max(80, Number(value) || 100));
-      captionFontSize.value = String(percent);
-      captionFontSizeValue.textContent = `${percent}%`;
-      captionBody.style.fontSize = `${percent}%`;
-    }
-    captionFontSize.addEventListener('input', event => applyCaptionFontSize(event.target.value));
-    applyCaptionFontSize(captionFontSize.value);
-
-    window.showCostumeDescription = function(name) {
-      const data = costumeData[name];
-      document.getElementById('descTitle').textContent = data.name;
-      document.getElementById('descBody').innerHTML = renderMarkdown(data.markdown);
-      document.getElementById('descPanel').classList.add('open');
-    };
-    document.getElementById('closeDesc').addEventListener('click', () =>
-      document.getElementById('descPanel').classList.remove('open'));
-  </script>
-  <script type="module" src="multiface.mjs?v=20260920-3"></script>
+  </aside>
+
+  <script src="assets/js/background.js?v=20260921-1"></script>
+  <script type="module" src="assets/js/caption-panel.mjs?v=20260921-1"></script>
+  <script type="module" src="assets/js/multiface.mjs?v=20260921-1"></script>
 </body>
 </html>
