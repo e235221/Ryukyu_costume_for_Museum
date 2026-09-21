@@ -1,11 +1,17 @@
 const isRyuso = kind => kind === 'man' || kind === 'woman';
+const outfitNames = {man: '男性の琉装', woman: '女性の琉装', bird: 'ヤンバルクイナ', none: 'なし'};
 
 export class AssignmentController {
   constructor({
     slots,
     peopleButtons,
     costumeButtons,
+    outfitPicker,
+    outfitSummary,
+    outfitChoice,
+    closeOutfitPickerOnSelect = () => true,
     detailButton,
+    detailModeLabel,
     detailHint,
     assignmentLabel,
     resetButton,
@@ -14,7 +20,12 @@ export class AssignmentController {
     this.slots = slots;
     this.peopleButtons = peopleButtons;
     this.costumeButtons = costumeButtons;
+    this.outfitPicker = outfitPicker;
+    this.outfitSummary = outfitSummary;
+    this.outfitChoice = outfitChoice;
+    this.closeOutfitPickerOnSelect = closeOutfitPickerOnSelect;
     this.detailButton = detailButton;
+    this.detailModeLabel = detailModeLabel;
     this.detailHint = detailHint;
     this.assignmentLabel = assignmentLabel;
     this.onChange = onChange;
@@ -32,6 +43,7 @@ export class AssignmentController {
     costumeButtons.forEach(button => button.addEventListener('click', () => {
       if (button.disabled) return;
       this.outfits[this.selectedPerson] = button.dataset.costume;
+      if (this.closeOutfitPickerOnSelect()) this.outfitPicker.open = false;
       this.refresh();
       this.onChange('costume');
     }));
@@ -87,7 +99,8 @@ export class AssignmentController {
       button.disabled = !visible;
       button.setAttribute('aria-disabled', String(!visible));
       button.setAttribute('aria-pressed', String(visible && index === this.selectedPerson));
-      button.textContent = `人物${index + 1}${visible ? ' ✓' : '（未検出）'}`;
+      button.textContent = String(index + 1);
+      button.setAttribute('aria-label', visible ? `人物${index + 1}` : `人物${index + 1}（未検出）`);
     });
     this.costumeButtons.forEach(button => {
       button.disabled = !hasSelectedPerson;
@@ -97,13 +110,19 @@ export class AssignmentController {
     this.assignmentLabel.textContent = hasSelectedPerson
       ? `人物${this.selectedPerson + 1} の衣装・顔`
       : '人物を検出すると衣装を選べます';
+    const chosenOutfit = outfitNames[this.outfits[this.selectedPerson]];
+    this.outfitChoice.textContent = hasSelectedPerson ? `：${chosenOutfit}` : '';
+    this.outfitSummary.setAttribute('aria-label', hasSelectedPerson
+      ? `人物${this.selectedPerson + 1}の衣装：${chosenOutfit}`
+      : '衣装：人物未検出');
 
     const canInspect = hasSelectedPerson && isRyuso(this.outfits[this.selectedPerson]);
     if (!canInspect) this.detailMode = false;
     this.detailButton.disabled = !canInspect;
     this.detailButton.setAttribute('aria-disabled', String(!canInspect));
     this.detailButton.setAttribute('aria-pressed', String(this.detailMode));
-    this.detailButton.textContent = this.detailMode ? '部位解説：オン' : '資料を体で読む';
+    this.detailModeLabel.textContent = '部位解説';
+    this.detailButton.setAttribute('aria-label', this.detailMode ? '部位解説：オン' : '部位解説：オフ');
     this.detailHint.hidden = !this.detailMode;
     if (!this.detailMode) return;
     if (this.handState === 'unavailable') {

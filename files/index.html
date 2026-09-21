@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>琉球衣装AR体験</title>
-  <link rel="stylesheet" href="assets/css/app.css?v=20260921-2">
+  <link rel="stylesheet" href="assets/css/app.css?v=20260922-3">
 </head>
 <body>
   <main id="landing">
@@ -31,22 +31,6 @@
   <section id="ar-container" aria-label="AR体験画面">
     <canvas id="backgroundCanvas" hidden></canvas>
 
-    <details class="background-picker" open>
-      <summary>背景を選ぶ</summary>
-      <div class="background-options" role="group" aria-label="背景の選択">
-        <div class="background-row">
-          <button type="button" data-background="none" aria-pressed="true">なし</button>
-          <button type="button" data-background="beach" aria-pressed="false">海</button>
-          <button type="button" data-background="stone" aria-pressed="false">石畳</button>
-        </div>
-        <div class="background-row">
-          <button type="button" data-background="castle-before" aria-pressed="false">首里城（復元前）</button>
-          <button type="button" data-background="castle-after" aria-pressed="false">首里城（復元後）</button>
-        </div>
-      </div>
-      <p id="backgroundStatus" role="status" aria-live="polite"></p>
-    </details>
-
     <div class="loading-overlay" id="loadingOverlay">
       <div class="loading-spinner" aria-hidden="true"></div>
       <p class="loading-text">カメラを起動中...</p>
@@ -63,25 +47,55 @@
     <canvas id="costumeCanvas"></canvas>
 
     <button class="back-btn" id="backBtn" type="button" aria-label="AR体験を終了">←</button>
-    <button class="info-btn" id="infoBtn" type="button" aria-label="解説を表示">i</button>
-    <button class="photo-btn" id="photoBtn" type="button" disabled>📷 撮影</button>
-    <p id="photoStatus" role="status" aria-live="polite"></p>
-
+    <button class="info-btn" id="infoBtn" type="button" aria-label="解説を表示"><span class="info-mark" aria-hidden="true">i</span><span class="info-text" aria-hidden="true">解説</span></button>
     <div class="costume-bar" aria-label="人物ごとの衣装">
-      <div class="person-picker" role="group" aria-label="衣装を変更する人物">
-        <button type="button" data-person="0" aria-pressed="true">人物1</button>
-        <button type="button" data-person="1" aria-pressed="false">人物2</button>
-        <button type="button" data-person="2" aria-pressed="false">人物3</button>
-        <button type="button" id="resetPeople">番号を左から振り直す</button>
+      <div class="dock-section person-section">
+        <div class="dock-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="6" r="3"/><path d="M5 21v-3a7 7 0 0 1 14 0v3z"/></svg><span>人物</span></div>
+        <div class="person-picker" role="group" aria-label="衣装を変更する人物">
+          <button type="button" data-person="0" aria-pressed="true" aria-label="人物1">1</button>
+          <button type="button" data-person="1" aria-pressed="false" aria-label="人物2">2</button>
+          <button type="button" data-person="2" aria-pressed="false" aria-label="人物3">3</button>
+        </div>
       </div>
-      <button type="button" id="detailModeBtn" aria-pressed="false" disabled>資料を体で読む</button>
-      <span id="assignmentLabel">人物1 の衣装・顔</span>
-      <div class="outfit-picker" role="group" aria-label="選択した人物の衣装">
-        <button type="button" data-costume="man" aria-pressed="true">男性の琉装</button>
-        <button type="button" data-costume="woman" aria-pressed="false">女性の琉装</button>
-        <button type="button" data-costume="bird" aria-pressed="false">ヤンバルクイナ</button>
-        <button type="button" data-costume="none" aria-pressed="false">なし</button>
+      <div class="dock-section outfit-section">
+        <div class="dock-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 3 4 2 4-2 5 4-2 5-3-1v10H8V11l-3 1-2-5z"/></svg><span>衣装</span></div>
+        <details class="outfit-picker" open>
+          <summary id="outfitSummary" aria-label="人物1の衣装：男性の琉装">衣装<span id="outfitChoice">：男性の琉装</span></summary>
+          <div class="outfit-options" role="group" aria-label="選択した人物の衣装・顔。横にスクロールできます">
+            <button type="button" data-costume="man" aria-pressed="true" aria-label="男性の琉装">男性の琉装</button>
+            <button type="button" data-costume="woman" aria-pressed="false" aria-label="女性の琉装">女性の琉装</button>
+            <button type="button" data-costume="bird" aria-pressed="false" aria-label="ヤンバルクイナ">クイナ</button>
+            <button type="button" data-costume="none" aria-pressed="false">なし</button>
+          </div>
+        </details>
       </div>
+      <div class="dock-section tools-section">
+        <details class="background-picker">
+          <summary id="backgroundSummary" aria-label="背景：なし"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="18" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m4 18 6-6 4 4 3-3 4 4"/></svg><span class="desktop-label">背景変更</span><span class="compact-label">背景</span><span id="backgroundChoice">：なし</span></summary>
+          <div class="background-options" role="group" aria-label="背景の選択">
+            <div class="background-row">
+              <button type="button" data-background="none" aria-pressed="true">なし</button>
+              <button type="button" data-background="beach" aria-pressed="false">海</button>
+              <button type="button" data-background="stone" aria-pressed="false">石畳</button>
+            </div>
+            <div class="background-row">
+              <button type="button" data-background="castle-before" aria-pressed="false">首里城（復元前）</button>
+              <button type="button" data-background="castle-after" aria-pressed="false">首里城（復元後）</button>
+            </div>
+          </div>
+        </details>
+        <button type="button" id="detailModeBtn" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c-2-2-6-2-9-1v15c3-1 7-1 9 1 2-2 6-2 9-1V4c-3-1-7-1-9 1z"/><path d="M12 5v15"/></svg><span id="detailModeLabel">部位解説</span></button>
+      </div>
+      <div class="capture-section"><button class="photo-btn" id="photoBtn" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v13H3z"/><circle cx="12" cy="13" r="4"/></svg><span>撮影</span></button></div>
+      <details class="person-settings">
+        <summary aria-label="人物設定"><span aria-hidden="true">⚙</span><span>設定</span></summary>
+        <div class="person-settings-panel">
+          <button type="button" id="resetPeople">番号を左から振り直す</button>
+        </div>
+      </details>
+      <span id="assignmentLabel" class="sr-only">人物1 の衣装・顔</span>
+      <p id="backgroundStatus" role="status" aria-live="polite"></p>
+      <p id="photoStatus" role="status" aria-live="polite"></p>
     </div>
   </section>
 
@@ -98,8 +112,8 @@
     <div class="desc-body" id="descBody"></div>
   </aside>
 
-  <script src="assets/js/background.js?v=20260921-1"></script>
+  <script src="assets/js/background.js?v=20260922-1"></script>
   <script type="module" src="assets/js/caption-panel.mjs?v=20260921-2"></script>
-  <script type="module" src="assets/js/multiface.mjs?v=20260921-3"></script>
+  <script type="module" src="assets/js/multiface.mjs?v=20260922-3"></script>
 </body>
 </html>

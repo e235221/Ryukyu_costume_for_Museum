@@ -19,7 +19,12 @@ class Element {
 const slots = new FaceSlots(3);
 const people = [0, 1, 2].map(person => new Element({person: String(person)}));
 const costumes = ['man', 'woman', 'none', 'bird'].map(costume => new Element({costume}));
+const outfitPicker = {open: true};
+let closeOnSelect = true;
+const outfitSummary = new Element();
+const outfitChoice = new Element();
 const detailButton = new Element();
+const detailModeLabel = new Element();
 const detailHint = new Element();
 const assignmentLabel = new Element();
 const resetButton = new Element();
@@ -28,7 +33,12 @@ const controller = new AssignmentController({
   slots,
   peopleButtons: people,
   costumeButtons: costumes,
+  outfitPicker,
+  outfitSummary,
+  outfitChoice,
+  closeOutfitPickerOnSelect: () => closeOnSelect,
   detailButton,
+  detailModeLabel,
   detailHint,
   assignmentLabel,
   resetButton,
@@ -36,17 +46,25 @@ const controller = new AssignmentController({
 });
 
 assert(people.every(button => button.disabled));
+assert.equal(people[0].textContent, '1');
+assert.equal(people[0].attributes['aria-label'], '人物1（未検出）');
 assert(costumes.every(button => button.disabled));
 assert.equal(detailButton.disabled, true);
 assert.equal(assignmentLabel.textContent, '人物を検出すると衣装を選べます');
+assert.equal(outfitChoice.textContent, '');
 
 slots.update([{x: .2, y: .4, size: .1}, {x: .5, y: .4, size: .1}, {x: .8, y: .4, size: .1}], 0);
 controller.refresh();
 assert(people.every(button => !button.disabled));
+assert.equal(people[0].attributes['aria-label'], '人物1');
 assert(costumes.every(button => !button.disabled));
 assert.equal(detailButton.disabled, false);
+assert.equal(outfitChoice.textContent, '：男性の琉装');
+assert.equal(outfitSummary.attributes['aria-label'], '人物1の衣装：男性の琉装');
 
 detailButton.click();
+assert.equal(detailModeLabel.textContent, '部位解説');
+assert.equal(detailButton.attributes['aria-label'], '部位解説：オン');
 assert.equal(controller.snapshot().detailMode, true);
 assert.equal(detailButton.attributes['aria-pressed'], 'true');
 assert.equal(detailHint.hidden, false);
@@ -54,6 +72,14 @@ controller.setHandState('ready');
 assert.match(detailHint.textContent, /指先で約1秒/);
 
 people[0].click(); costumes[1].click();
+assert.equal(outfitPicker.open, false, '衣装選択後にパネルを閉じる');
+assert.equal(outfitChoice.textContent, '：女性の琉装');
+closeOnSelect = false;
+outfitPicker.open = true;
+costumes[0].click();
+assert.equal(outfitPicker.open, true, '広い画面では衣装ボタンを表示したままにする');
+closeOnSelect = true;
+costumes[1].click();
 people[1].click(); costumes[0].click();
 people[2].click(); costumes[2].click();
 assert.equal(detailButton.disabled, true);

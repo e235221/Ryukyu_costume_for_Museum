@@ -11,7 +11,10 @@
   const canvas = document.getElementById('backgroundCanvas');
   const context = canvas.getContext('2d');
   const message = document.getElementById('backgroundStatus');
+  const summary = document.getElementById('backgroundSummary');
+  const choice = document.getElementById('backgroundChoice');
   const buttons = [...document.querySelectorAll('[data-background]')];
+  const labels = {none: 'なし', beach: '海', stone: '石畳', 'castle-before': '首里城（復元前）', 'castle-after': '首里城（復元後）'};
   function cover(ctx, image, width, height) {
     const iw = image.videoWidth || image.naturalWidth || image.width;
     const ih = image.videoHeight || image.naturalHeight || image.height;
@@ -80,6 +83,8 @@
     const token = ++generation;
     selected = name; clearInterval(timer); hide();
     buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.background === name)));
+    summary.setAttribute('aria-label', `背景：${labels[name] || 'なし'}`);
+    choice.textContent = `：${labels[name] || 'なし'}`;
     message.textContent = name === 'none' ? '' : '背景を準備中...';
     if (name === 'none') return;
     try {

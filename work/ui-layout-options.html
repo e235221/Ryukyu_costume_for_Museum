@@ -1,0 +1,107 @@
+<div id="museum-ar-layout-options">
+  <style>
+    #museum-ar-layout-options {
+      --app-bg: light-dark(#f3efe8, #171614);
+      --app-panel: light-dark(#fffaf1, #27231e);
+      --app-text: light-dark(#211b17, #f7efe2);
+      --app-muted: light-dark(#5f5750, #c6b9a8);
+      --app-stroke: light-dark(#c6b9a8, #655b50);
+      --app-gold: light-dark(#a37717, #f0cb6b);
+      --app-red: light-dark(#9c3027, #a62d29);
+      color-scheme: light dark;
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+      max-width: 760px;
+      margin: 0 auto;
+      color: var(--app-text);
+      font-family: system-ui, sans-serif;
+    }
+    #museum-ar-layout-options * { box-sizing: border-box; }
+    #museum-ar-layout-options .option { min-width: 0; }
+    #museum-ar-layout-options .option-label { margin: 0 0 8px; font-weight: 500; }
+    #museum-ar-layout-options .phone {
+      position: relative;
+      display: flex;
+      min-height: 540px;
+      flex-direction: column;
+      justify-content: space-between;
+      overflow: hidden;
+      border: 1px solid var(--app-stroke);
+      border-radius: 24px;
+      background: var(--app-bg);
+    }
+    #museum-ar-layout-options .camera-field {
+      position: absolute;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      background: radial-gradient(circle at 50% 28%, var(--app-panel), var(--app-bg) 70%);
+      color: var(--app-muted);
+    }
+    #museum-ar-layout-options .figure {
+      position: relative;
+      width: 140px;
+      height: 270px;
+      opacity: .35;
+    }
+    #museum-ar-layout-options .figure::before,
+    #museum-ar-layout-options .figure::after { content: ""; position: absolute; left: 50%; transform: translateX(-50%); background: var(--app-gold); }
+    #museum-ar-layout-options .figure::before { top: 0; width: 72px; height: 72px; border-radius: 50%; }
+    #museum-ar-layout-options .figure::after { top: 78px; width: 140px; height: 190px; border-radius: 55px 55px 18px 18px; }
+    #museum-ar-layout-options .top,
+    #museum-ar-layout-options .controls { position: relative; z-index: 1; }
+    #museum-ar-layout-options .top { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 13px; }
+    #museum-ar-layout-options .top button,
+    #museum-ar-layout-options .controls button {
+      min-height: 44px;
+      padding: 7px 12px;
+      border: 1px solid var(--app-stroke);
+      border-radius: 10px;
+      color: var(--app-text);
+      background: var(--app-panel);
+      font: inherit;
+    }
+    #museum-ar-layout-options .top .quiet { color: var(--app-muted); }
+    #museum-ar-layout-options .controls { display: grid; gap: 9px; padding: 14px; background: var(--app-panel); }
+    #museum-ar-layout-options .row { display: flex; align-items: center; justify-content: center; flex-wrap: wrap; gap: 6px; }
+    #museum-ar-layout-options .row-label { margin: 0; color: var(--app-muted); }
+    #museum-ar-layout-options button.selected { border-color: var(--app-gold); color: var(--app-gold); }
+    #museum-ar-layout-options .shutter-row { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 7px; }
+    #museum-ar-layout-options .shutter-row > :first-child { justify-self: start; }
+    #museum-ar-layout-options .shutter-row > :last-child { justify-self: end; }
+    #museum-ar-layout-options .controls .shutter { min-width: 76px; min-height: 54px; border-color: var(--app-gold); border-radius: 28px; color: #fff; background: var(--app-red); font-weight: 500; }
+    #museum-ar-layout-options .mode-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    #museum-ar-layout-options .mode-row button { width: 100%; }
+    #museum-ar-layout-options .person-label { text-align: center; color: var(--app-muted); }
+    @media (max-width: 650px) {
+      #museum-ar-layout-options { grid-template-columns: 1fr; max-width: 380px; }
+    }
+  </style>
+  <div class="option">
+    <p class="option-label">A｜一画面に集約（推奨）</p>
+    <div class="phone" aria-label="撮影を下中央に、背景と部位解説を下部操作帯に集約した配置案">
+      <div class="camera-field"><div class="figure" aria-hidden="true"></div></div>
+      <div class="top"><button type="button">戻る</button><span class="quiet">2人を認識中</span><button type="button">解説</button></div>
+      <div class="controls">
+        <div class="row"><button type="button" class="selected">人物1</button><button type="button">人物2</button><button type="button">人物設定 ···</button></div>
+        <div class="row"><span class="row-label">琉装</span><button type="button" class="selected">男性</button><button type="button">女性</button></div>
+        <div class="row"><span class="row-label">その他</span><button type="button">ヤンバルクイナ</button><button type="button">なし</button></div>
+        <div class="shutter-row"><button type="button">背景：海</button><button type="button" class="shutter">撮影</button><button type="button">部位解説</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="option">
+    <p class="option-label">B｜体験モードを分離</p>
+    <div class="phone" aria-label="顔ハメと資料を読むモードを切り替える配置案">
+      <div class="camera-field"><div class="figure" aria-hidden="true"></div></div>
+      <div class="top"><button type="button">戻る</button><span class="quiet">2人を認識中</span><button type="button">解説</button></div>
+      <div class="controls">
+        <div class="mode-row"><button type="button" class="selected">顔ハメ</button><button type="button">資料を読む</button></div>
+        <p class="person-label">人物1を選択中</p>
+        <div class="row"><button type="button" class="selected">男性琉装</button><button type="button">女性琉装</button><button type="button">その他 ···</button></div>
+        <div class="shutter-row"><button type="button">背景</button><button type="button" class="shutter">撮影</button><button type="button">人物設定</button></div>
+      </div>
+    </div>
+  </div>
+</div>

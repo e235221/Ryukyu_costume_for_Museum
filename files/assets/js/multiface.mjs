@@ -1,6 +1,6 @@
 import {FaceSlots, faceGeometry} from './face-slots.mjs';
 import {composePhoto, photoFilename} from './photo-capture.mjs';
-import {AssignmentController} from './assignment-controller.mjs?v=20260921-1';
+import {AssignmentController} from './assignment-controller.mjs?v=20260922-3';
 import {CostumeOverlay} from './costume-overlay.mjs?v=20260921-1';
 import {visionModels} from './vision-models.mjs?v=20260921-1';
 
@@ -29,11 +29,23 @@ let lastFaceFrame = 0;
 let lastHandFrame = 0;
 let overlay;
 
+const outfitPicker = document.querySelector('.outfit-picker');
+const desktopDock = window.matchMedia('(min-width: 900px)');
+const syncOutfitPicker = () => { outfitPicker.open = desktopDock.matches; };
+syncOutfitPicker();
+if (desktopDock.addEventListener) desktopDock.addEventListener('change', syncOutfitPicker);
+else desktopDock.addListener(syncOutfitPicker);
+
 const assignments = new AssignmentController({
   slots,
   peopleButtons: [...document.querySelectorAll('[data-person]')],
   costumeButtons: [...document.querySelectorAll('[data-costume]')],
+  outfitPicker,
+  outfitSummary: $('outfitSummary'),
+  outfitChoice: $('outfitChoice'),
+  closeOutfitPickerOnSelect: () => !desktopDock.matches,
   detailButton: $('detailModeBtn'),
+  detailModeLabel: $('detailModeLabel'),
   detailHint: $('detailHint'),
   assignmentLabel: $('assignmentLabel'),
   resetButton: $('resetPeople'),

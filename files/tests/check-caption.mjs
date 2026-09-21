@@ -3,9 +3,10 @@ import assert from 'node:assert/strict';
 import {captionData, detailCaptionData, initCaptionPanel, renderMarkdown} from '../assets/js/caption-panel.mjs';
 
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-assert.match(html, /data-costume="man"[^>]*>男性の琉装<\/button>/);
-assert.match(html, /data-costume="woman"[^>]*>女性の琉装<\/button>/);
-assert.match(html, /id="detailModeBtn"[^>]*>資料を体で読む<\/button>/);
+assert.match(html, /data-costume="man"[^>]*aria-label="男性の琉装"[^>]*>男性の琉装<\/button>/);
+assert.match(html, /data-costume="woman"[^>]*aria-label="女性の琉装"[^>]*>女性の琉装<\/button>/);
+assert.match(html, /data-costume="bird"[^>]*aria-label="ヤンバルクイナ"[^>]*>クイナ<\/button>/);
+assert.match(html, /id="detailModeLabel">部位解説<\/span>/);
 assert.match(html, /id="detailHint"/);
 assert.doesNotMatch(html, /琉球男性衣装（オリオン）|琉球女性衣装（オリオン）/);
 assert.match(html, /src="assets\/js\/caption-panel\.mjs\?v=[^"]+"/);
