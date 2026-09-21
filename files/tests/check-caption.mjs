@@ -1,10 +1,12 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
-import {captionData, initCaptionPanel, renderMarkdown} from '../assets/js/caption-panel.mjs';
+import {captionData, detailCaptionData, initCaptionPanel, renderMarkdown} from '../assets/js/caption-panel.mjs';
 
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 assert.match(html, /data-costume="man"[^>]*>男性の琉装<\/button>/);
 assert.match(html, /data-costume="woman"[^>]*>女性の琉装<\/button>/);
+assert.match(html, /id="detailModeBtn"[^>]*>資料を体で読む<\/button>/);
+assert.match(html, /id="detailHint"/);
 assert.doesNotMatch(html, /琉球男性衣装（オリオン）|琉球女性衣装（オリオン）/);
 assert.match(html, /src="assets\/js\/caption-panel\.mjs\?v=[^"]+"/);
 
@@ -16,7 +18,7 @@ const node = id => {
     value: id === 'captionFontSize' ? '100' : '',
     style: {},
     events: {},
-    classList: {add() {}, remove() {}},
+    classList: {add() {}, remove() {}, contains() {return false;}},
     addEventListener(type, listener) {this.events[type] = listener;}
   });
   return nodes.get(id);
@@ -50,6 +52,21 @@ node('captionFontSize').events.input({target: {value: '999'}});
 assert.equal(node('descBody').style.fontSize, '160%', 'font size must be clamped to the maximum');
 
 assert.equal(captionData.man.markdown, captionData.woman.markdown);
+assert.equal(windowRef.showCostumeDetail('man', 'sleeve'), true);
+assert.match(node('descBody').innerHTML, /<h2>袖<\/h2>/);
+assert.match(node('descBody').innerHTML, /袖口から内側が見えるため/);
+assert.equal(windowRef.showCostumeDetail('man', 'waist'), true);
+assert.match(node('descBody').innerHTML, /男性は，腰のあたりを帯で固定し/);
+assert.equal(windowRef.showCostumeDetail('woman', 'waist'), true);
+assert.match(node('descBody').innerHTML, /ウシンチー/);
+assert.equal(windowRef.showCostumeDetail('man', 'head'), true);
+assert.match(node('descBody').innerHTML, /ハチマチ/);
+assert.equal(windowRef.showCostumeDetail('woman', 'hair'), true);
+assert.match(node('descBody').innerHTML, /ウチナーカンプー/);
+assert.equal(windowRef.showCostumeDetail('woman', 'head'), false, 'head caption is male-only');
+assert.equal(windowRef.showCostumeDetail('man', 'hair'), false, 'hair caption is female-only');
+assert.deepEqual(Object.keys(detailCaptionData.man), ['sleeve', 'waist', 'head']);
+assert.deepEqual(Object.keys(detailCaptionData.woman), ['sleeve', 'waist', 'hair']);
 assert.match(renderMarkdown('## 見出し\n\n本文'), /<h2>見出し<\/h2><p>本文<\/p>/);
 assert.doesNotMatch(renderMarkdown('<script>alert(1)</script>'), /<script>/);
 

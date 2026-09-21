@@ -127,6 +127,49 @@ export const captionData = Object.freeze({
   bird: {name: 'ヤンバルクイナに変身', markdown: yanbaruMarkdown}
 });
 
+const sleeveMarkdown = `## 袖
+
+琉装をよく見ると，袖が広く作られていることがわかります。
+
+袖口から内側が見えるため，表の布だけでなく，内側の色にも気が配られています。`;
+
+export const detailCaptionData = Object.freeze({
+  man: Object.freeze({
+    sleeve: {name: '男性の琉装：袖', markdown: sleeveMarkdown},
+    waist: {name: '男性の琉装：腰', markdown: `## 腰
+
+### 男性の着方
+
+男性は，腰のあたりを帯で固定し，帯の結び目を前にします。`},
+    head: {name: '男性の琉装：頭', markdown: `## 頭
+
+男性が頭につけるかぶりものに，ハチマチがあります。これは筒をずらして重ねたような帽子を，ひもを顎で結んで留めます。
+
+男性が頭につけるハチマチは，身分や位を表すもののひとつです。ハチマチにはいくつかの色があり，位によって使える色が決められていました。
+
+昔の人びとは，服や頭の装いを見ることで，その人の立場を知ることができたのです。`}
+  }),
+  woman: Object.freeze({
+    sleeve: {name: '女性の琉装：袖', markdown: sleeveMarkdown},
+    waist: {name: '女性の琉装：腰', markdown: `## 腰
+
+### 女性の着方　ウシンチー
+
+女性の琉装には，ウシンチーとよばれる着方があります。
+
+日本本土の着物のように太い帯を腰に巻くのではなく，腰につけた細いひもに，衣服の一部をはさんで形を整えます。
+
+腰のまわりを強くしめつけないため，ゆったりと着ることができます。
+
+衣装を見るときは，腰のまわりがどのようになっているかにも注目してみてください。`},
+    hair: {name: '女性の琉装：髪', markdown: `## 髪
+
+### 髪型も大切な装い
+
+女性の伝統的な髪型のひとつに，ウチナーカンプーがあります。長い髪をまとめて結い上げ，大きく美しい形を作ります。`}
+  })
+});
+
 function escapeHtml(value) {
   return value.replace(/[&<>"']/g, character => ({
     '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
@@ -174,14 +217,26 @@ export function initCaptionPanel(documentRef = document, windowRef = window) {
   documentRef.getElementById('closeDesc').addEventListener('click', () => panel.classList.remove('open'));
   applyFontSize(fontSize.value);
 
-  windowRef.showCostumeDescription = name => {
-    const data = captionData[name] || captionData.man;
+  const showCaption = data => {
     documentRef.getElementById('descTitle').textContent = data.name;
     body.innerHTML = renderMarkdown(data.markdown);
     panel.classList.add('open');
   };
 
-  return {show: windowRef.showCostumeDescription, applyFontSize};
+  windowRef.showCostumeDescription = name => showCaption(captionData[name] || captionData.man);
+  windowRef.showCostumeDetail = (costume, region) => {
+    const data = detailCaptionData[costume]?.[region];
+    if (!data) return false;
+    showCaption(data);
+    return true;
+  };
+  windowRef.isCostumeDescriptionOpen = () => panel.classList.contains('open');
+
+  return {
+    show: windowRef.showCostumeDescription,
+    showDetail: windowRef.showCostumeDetail,
+    applyFontSize
+  };
 }
 
 if (typeof document !== 'undefined') initCaptionPanel();

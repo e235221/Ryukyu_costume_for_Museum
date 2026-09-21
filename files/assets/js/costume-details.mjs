@@ -1,0 +1,108 @@
+const REGION_LABELS = Object.freeze({
+  sleeve: '袖',
+  waist: '腰',
+  head: '頭',
+  hair: '髪'
+});
+
+// Regions use the 683 x 1024 drawing coordinate system shared by both costumes.
+const COSTUME_REGIONS = Object.freeze({
+  man: Object.freeze([
+    {id: 'head', boxes: [{x: 270, y: 105, width: 145, height: 145}]},
+    {id: 'waist', boxes: [{x: 220, y: 445, width: 255, height: 180}]},
+    {id: 'sleeve', boxes: [
+      {x: 120, y: 275, width: 190, height: 285},
+      {x: 375, y: 275, width: 190, height: 285}
+    ]}
+  ]),
+  woman: Object.freeze([
+    {id: 'hair', boxes: [{x: 275, y: 130, width: 155, height: 150}]},
+    {id: 'waist', boxes: [{x: 245, y: 505, width: 195, height: 155}]},
+    {id: 'sleeve', boxes: [
+      {x: 105, y: 335, width: 205, height: 285},
+      {x: 375, y: 335, width: 205, height: 285}
+    ]}
+  ])
+});
+
+function pointInBox(point, box) {
+  return point.x >= box.x && point.x <= box.x + box.width
+    && point.y >= box.y && point.y <= box.y + box.height;
+}
+
+function toCostumePoint(point, placement) {
+  const dx = point.x - placement.center.x;
+  const dy = point.y - placement.center.y;
+  const cosine = Math.cos(placement.angle);
+  const sine = Math.sin(placement.angle);
+  return {
+    x: (cosine * dx + sine * dy) / placement.factor + placement.hole.x,
+    y: (-sine * dx + cosine * dy) / placement.factor + placement.hole.y
+  };
+}
+
+export function findCostumeDetail(point, placements) {
+  for (let index = placements.length - 1; index >= 0; index -= 1) {
+    const placement = placements[index];
+    const regions = COSTUME_REGIONS[placement.kind];
+    if (!regions) continue;
+    const costumePoint = toCostumePoint(point, placement);
+    const region = regions.find(candidate => candidate.boxes.some(box => pointInBox(costumePoint, box)));
+    if (region) {
+      return {
+        personId: placement.personId,
+        costume: placement.kind,
+        region: region.id,
+        label: REGION_LABELS[region.id]
+      };
+    }
+  }
+  return null;
+}
+
+export class CostumeDetailExplorer {
+  constructor({dwellMs = 900, cooldownMs = 1200} = {}) {
+    this.dwellMs = dwellMs;
+    this.cooldownMs = cooldownMs;
+    this.reset();
+  }
+
+  reset() {
+    this.key = null;
+    this.since = 0;
+    this.blockedUntil = 0;
+  }
+
+  activate(point, placements, now = 0) {
+    const hit = findCostumeDetail(point, placements);
+    if (hit) {
+      this.blockedUntil = now + this.cooldownMs;
+      this.key = null;
+    }
+    return hit;
+  }
+
+  update(points, placements, now) {
+    const candidate = points
+      .map(point => ({point, hit: findCostumeDetail(point, placements)}))
+      .find(item => item.hit);
+
+    if (!candidate || now < this.blockedUntil) {
+      this.key = null;
+      return {point: candidate?.point || null, hit: candidate?.hit || null, progress: 0, activated: null};
+    }
+
+    const key = `${candidate.hit.personId}:${candidate.hit.costume}:${candidate.hit.region}`;
+    if (key !== this.key) {
+      this.key = key;
+      this.since = now;
+    }
+
+    const progress = Math.min(1, Math.max(0, (now - this.since) / this.dwellMs));
+    if (progress < 1) return {...candidate, progress, activated: null};
+
+    this.key = null;
+    this.blockedUntil = now + this.cooldownMs;
+    return {...candidate, progress: 1, activated: candidate.hit};
+  }
+}

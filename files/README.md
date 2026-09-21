@@ -28,6 +28,8 @@
 - 開閉できる2行構成の背景選択パネル
 - 男女の琉装・ヤンバルクイナに関する解説
 - キャプションの文字サイズを80〜160%で変更
+- 顔ハメとは独立した「資料を体で読む」部位解説モード
+- 指先を約1秒合わせるか画面をタッチして、袖・腰・頭／髪の解説を表示
 - カメラ・背景・衣装を合成したPNG写真の保存
 - 停止・再開時のカメラ、顔検出、背景処理の終了
 
@@ -38,6 +40,7 @@
 | Frontend | HTML5 / CSS / Vanilla JavaScript | UI、カメラ制御、状態管理 |
 | Frontend | Canvas 2D | 衣装、ヤンバルクイナ、背景、撮影画像の合成 |
 | Computer Vision | MediaPipe Face Landmarker 0.10.9 | 最大3人の顔ランドマーク検出 |
+| Computer Vision | MediaPipe Hand Landmarker 0.10.9 | 部位解説モードで最大2本の人差し指を検出 |
 | Computer Vision | MediaPipe Selfie Segmentation 0.1.1675465747 | 人物と背景の分離 |
 | Backend | なし | すべてブラウザ内で処理 |
 | Database | なし | 永続データを保存しない |
@@ -73,6 +76,12 @@ CDNからMediaPipeのJavaScript、WASM、学習済みモデルを読み込みま
 - 顔追跡とは別周期で最大約10fpsに制限し、同時推論を避けています。
 - 顔追跡と背景処理は別フレームで動くため、速い動きでは人物と衣装がずれる可能性があります。
 
+### Hand Landmarkerと部位解説
+
+- 顔ハメは顔に追従するため、本人の顔と衣装の相対位置が変わりません。そのため、身体をポインタにする操作には人差し指を使います。
+- 通常の顔ハメ中は手認識を行わず、「資料を体で読む」をオンにしたときだけ最大約6fpsで動かします。
+- 手認識を利用できない環境でも、同じ衣装部位を画面タッチして解説できます。
+
 ### Vanilla JavaScript・ビルド不要構成
 
 - 展示用PCで依存パッケージをインストールせず、静的サーバーだけで起動できることを重視しました。
@@ -90,10 +99,14 @@ CDNからMediaPipeのJavaScript、WASM、学習済みモデルを読み込みま
     │   ├── css/
     │   │   └── app.css            # 画面全体のスタイル
     │   ├── js/
-    │   │   ├── multiface.mjs      # カメラ、顔検出、人物別割当、衣装描画
+    │   │   ├── multiface.mjs      # カメラ・フレーム進行と各moduleの調整
     │   │   ├── face-slots.mjs     # 人物番号の追跡
     │   │   ├── background.js      # 人物切り抜きと背景合成
     │   │   ├── photo-capture.mjs  # 撮影用レイヤー合成
+    │   │   ├── assignment-controller.mjs # 人物・衣装・部位モードのUI状態
+    │   │   ├── costume-overlay.mjs # 衣装描画と部位操作の統合
+    │   │   ├── costume-details.mjs # 衣装部位の座標判定と滞在時間
+    │   │   ├── vision-models.mjs  # MediaPipeモデルの共有読込とGPU/CPU切替
     │   │   └── caption-panel.mjs  # 解説データ、Markdown表示、文字サイズ
     │   └── images/
     │       ├── costumes/          # 男性・女性の琉装PNG
@@ -166,6 +179,9 @@ node files/tests/check-assignments.mjs
 node files/tests/check-background.cjs
 node files/tests/check-photo-capture.mjs
 node files/tests/check-caption.mjs
+node files/tests/check-costume-details.mjs
+node files/tests/check-costume-overlay.mjs
+node files/tests/check-vision-models.mjs
 ```
 
 テストは追跡、人物別割当、未検出ボタンの無効化、背景切替、撮影レイヤー、Markdownキャプションを検査します。顔入力、DOM、Canvas、背景モデルの一部は模擬値であり、実カメラの精度・性能を保証するものではありません。
@@ -181,8 +197,9 @@ node files/tests/check-caption.mjs
 5. 顔の上の人物番号は約5秒後に消えます。人物が交差して番号が入れ替わった場合は「番号を左から振り直す」を押します。
 6. 「背景を選ぶ」を開き、なし・海・石畳・首里城（復元前）・首里城（復元後）を選択します。
 7. インフォメーションマークから展示解説を開きます。「文字サイズ」バーで80〜160%に変更できます。
-8. 「📷 撮影」を押すと、カメラ、背景、衣装を合成したPNGを保存します。
-9. 左上の矢印を押すと、カメラ、顔検出、背景処理を停止して開始画面へ戻ります。
+8. 部分ごとの解説を読む場合は、琉装を選んで「資料を体で読む」を押します。男性は袖・腰・頭、女性は袖・腰・髪へ人差し指を約1秒合わせます。画面上の同じ部分をタッチしても表示できます。
+9. 「📷 撮影」を押すと、カメラ、背景、衣装を合成したPNGを保存します。指先のマークや部位解説の案内は保存画像に含まれません。
+10. 左上の矢印を押すと、カメラ、顔検出、手検出、背景処理を停止して開始画面へ戻ります。
 
 ### 写真撮影
 
@@ -206,7 +223,7 @@ node files/tests/check-caption.mjs
 
 画像やJavaScriptを変更したのに表示が変わらない場合は、Macで`Command + Shift + R`を押して強制再読み込みします。必要に応じてブラウザのサイトデータを削除してください。
 
-`assets/css/app.css`、`assets/js/background.js`、`assets/js/caption-panel.mjs`、`assets/js/multiface.mjs`を更新した場合は、`index.html`の読込URLにある`?v=`も変更し、旧ファイルが再利用されないようにします。
+`assets/css/app.css`、`assets/js/background.js`、`assets/js/caption-panel.mjs`、`assets/js/multiface.mjs`を更新した場合は、`index.html`の読込URLにある`?v=`も変更し、旧ファイルが再利用されないようにします。`costume-details.mjs`を変更した場合は、`multiface.mjs`のimportにある`?v=`を変更します。
 
 
 ### 文献・画像利用について
@@ -230,4 +247,5 @@ https://www.weblio.jp/content/%E7%90%89%E8%A3%85
 - 遠距離の小さい顔、横顔、手で隠れた顔は認識しにくくなります。
 - 2D画像のため、全身の姿勢や腕の前後関係に合わせた変形は行いません。
 - 背景処理と顔追跡が別周期のため、速い動きでは一時的にずれる場合があります。
+- 手認識は部位解説モード中だけ最大2本・約6fpsで行います。手が隠れている場合や指先が小さい場合は、画面タッチを利用してください。
 - 長時間運転時の性能、SafariとChromeの全端末、実カメラからの写真保存は継続して確認が必要です。

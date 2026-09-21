@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>琉球衣装AR体験</title>
-  <link rel="stylesheet" href="assets/css/app.css?v=20260921-1">
+  <link rel="stylesheet" href="assets/css/app.css?v=20260921-2">
 </head>
 <body>
   <main id="landing">
@@ -53,6 +53,7 @@
     </div>
 
     <p id="arStatus" role="status" aria-live="polite"></p>
+    <p id="detailHint" role="status" aria-live="polite" hidden></p>
 
     <div hidden>
       <img id="img-man" src="assets/images/costumes/orion-man.png" alt="">
@@ -73,6 +74,7 @@
         <button type="button" data-person="2" aria-pressed="false">人物3</button>
         <button type="button" id="resetPeople">番号を左から振り直す</button>
       </div>
+      <button type="button" id="detailModeBtn" aria-pressed="false" disabled>資料を体で読む</button>
       <span id="assignmentLabel">人物1 の衣装・顔</span>
       <div class="outfit-picker" role="group" aria-label="選択した人物の衣装">
         <button type="button" data-costume="man" aria-pressed="true">男性の琉装</button>
@@ -97,7 +99,7 @@
   </aside>
 
   <script src="assets/js/background.js?v=20260921-1"></script>
-  <script type="module" src="assets/js/caption-panel.mjs?v=20260921-1"></script>
-  <script type="module" src="assets/js/multiface.mjs?v=20260921-1"></script>
+  <script type="module" src="assets/js/caption-panel.mjs?v=20260921-2"></script>
+  <script type="module" src="assets/js/multiface.mjs?v=20260921-3"></script>
 </body>
 </html>
