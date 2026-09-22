@@ -1,7 +1,29 @@
-import {captionDataEn, detailCaptionDataEn} from './caption-data-en.mjs?v=20260922-1';
-import {getLanguage, onLanguageChange} from './language.mjs?v=20260922-2';
+// 展示の文章はこのファイルで編集します。ja と en の両方を必要に応じて更新してください。
+// caption の markdown は ## 見出し、### 小見出し、**太字**、*斜体*、https リンクに対応します。
+// man / woman / bird と sleeve / waist / head / hair のキーは変更しないでください。
+export const introText = {
+  ja: {
+    title: '琉球衣装AR体験',
+    subtitle: 'Ryukyu Costume AR Experience',
+    lines: [
+      '琉球王国時代の衣装をARで体験できるアプリです。',
+      'カメラに顔を映すと、琉装やヤンバルクイナの姿を楽しめます。',
+      '衣装や沖縄の自然についての解説も確認できます。'
+    ]
+  },
+  en: {
+    title: 'Ryukyuan Costume AR',
+    subtitle: 'Discover Ryukyuan culture through AR',
+    lines: [
+      'Experience clothing from the Ryukyu Kingdom through AR.',
+      'Show your face to the camera to try Ryukyuan dress or become a Yanbaru rail.',
+      'Explore explanations of the clothing and Okinawa’s nature.'
+    ]
+  }
+};
 
-const ryusoMarkdown = `## 琉球の装い　琉装
+// 日本語の展示解説と部位解説
+const ryusoMarkdownJa = `## 琉球の装い　琉装
 
 色あざやかな布，大きく開いた袖，ゆったりとした形。
 
@@ -111,7 +133,7 @@ const ryusoMarkdown = `## 琉球の装い　琉装
 
 一着の衣装から，琉球王国の文化だけでなく，当時の社会のしくみも読み取ることができるのです。`;
 
-const yanbaruMarkdown = `### 飛べない鳥が，森を走る。
+const yanbaruMarkdownJa = `### 飛べない鳥が，森を走る。
 
 ヤンバルクイナには翼があります。しかし，空を飛ぶことはほとんどできません。
 
@@ -124,21 +146,21 @@ const yanbaruMarkdown = `### 飛べない鳥が，森を走る。
 
 もし，やんばるの森を訪れることがあれば，少しだけ耳を澄ませてみてください。姿は見えなくても，森の奥から鋭い鳴き声が聞こえてくるかもしれません。`;
 
-export const captionData = Object.freeze({
-  man: {name: '琉球の装い　琉装', markdown: ryusoMarkdown},
-  woman: {name: '琉球の装い　琉装', markdown: ryusoMarkdown},
-  bird: {name: 'ヤンバルクイナに変身', markdown: yanbaruMarkdown}
+const captionDataJa = Object.freeze({
+  man: {name: '琉球の装い　琉装', markdown: ryusoMarkdownJa},
+  woman: {name: '琉球の装い　琉装', markdown: ryusoMarkdownJa},
+  bird: {name: 'ヤンバルクイナに変身', markdown: yanbaruMarkdownJa}
 });
 
-const sleeveMarkdown = `## 袖
+const sleeveMarkdownJa = `## 袖
 
 琉装をよく見ると，袖が広く作られていることがわかります。
 
 袖口から内側が見えるため，表の布だけでなく，内側の色にも気が配られています。`;
 
-export const detailCaptionData = Object.freeze({
+const detailCaptionDataJa = Object.freeze({
   man: Object.freeze({
-    sleeve: {name: '男性の琉装：袖', markdown: sleeveMarkdown},
+    sleeve: {name: '男性の琉装：袖', markdown: sleeveMarkdownJa},
     waist: {name: '男性の琉装：腰', markdown: `## 腰
 
 ### 男性の着方
@@ -153,7 +175,7 @@ export const detailCaptionData = Object.freeze({
 昔の人びとは，服や頭の装いを見ることで，その人の立場を知ることができたのです。`}
   }),
   woman: Object.freeze({
-    sleeve: {name: '女性の琉装：袖', markdown: sleeveMarkdown},
+    sleeve: {name: '女性の琉装：袖', markdown: sleeveMarkdownJa},
     waist: {name: '女性の琉装：腰', markdown: `## 腰
 
 ### 女性の着方　ウシンチー
@@ -173,90 +195,179 @@ export const detailCaptionData = Object.freeze({
   })
 });
 
-function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, character => ({
-    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-  })[character]);
-}
+// English exhibit captions and detail captions
+const ryusoMarkdownEn = `## Ryukyuan Dress: Ryūsō
 
-function renderInlineMarkdown(value) {
-  const pattern = /\[([^\]]+)\]\((https:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*|\*([^*]+)\*/g;
-  let html = '';
-  let lastIndex = 0;
-  let match;
-  while ((match = pattern.exec(value))) {
-    html += escapeHtml(value.slice(lastIndex, match.index));
-    html += match[3]
-      ? `<strong>${escapeHtml(match[3])}</strong>`
-      : match[4]
-        ? `<em>${escapeHtml(match[4])}</em>`
-        : `<a href="${escapeHtml(match[2])}" target="_blank" rel="noopener noreferrer">${escapeHtml(match[1])}</a>`;
-    lastIndex = pattern.lastIndex;
-  }
-  return html + escapeHtml(value.slice(lastIndex));
-}
+Brilliant fabrics, wide sleeves, and a relaxed shape.
 
-export function renderMarkdown(markdown) {
-  const blocks = markdown.trim().split(/\n\s*\n/).map(block => {
-    if (block.startsWith('### ')) return `<h3>${escapeHtml(block.slice(4))}</h3>`;
-    if (block.startsWith('## ')) return `<h2>${escapeHtml(block.slice(3))}</h2>`;
-    return `<p>${renderInlineMarkdown(block.replace(/\n/g, ' '))}</p>`;
-  });
-  return `<div class="desc-markdown">${blocks.join('')}</div>`;
-}
+Ryūsō is traditional Okinawan clothing that developed during the era of the Ryukyu Kingdom. In Okinawan, it is also called *Uchina-sugai*.
 
-export function initCaptionPanel(documentRef = document, windowRef = window) {
-  const fontSize = documentRef.getElementById('captionFontSize');
-  const fontSizeValue = documentRef.getElementById('captionFontSizeValue');
-  const body = documentRef.getElementById('descBody');
-  const panel = documentRef.getElementById('descPanel');
-  let currentSelection = null;
+The Ryukyu Kingdom exchanged people, goods, and ideas with China, Japan, and other places across the sea. Techniques and cultural influences from those exchanges met Okinawa’s climate and daily life, creating a distinctive style of dress.
 
-  const applyFontSize = value => {
-    const percent = Math.min(160, Math.max(80, Number(value) || 100));
-    fontSize.value = String(percent);
-    fontSizeValue.textContent = `${percent}%`;
-    body.style.fontSize = `${percent}%`;
-  };
+### Designed for Okinawa’s heat
 
-  fontSize.addEventListener('input', event => applyFontSize(event.target.value));
-  documentRef.getElementById('closeDesc').addEventListener('click', () => panel.classList.remove('open'));
-  applyFontSize(fontSize.value);
+Look closely at ryūsō: the sleeves are wide and the overall shape is loose.
 
-  const showCaption = data => {
-    documentRef.getElementById('descTitle').textContent = data.name;
-    body.innerHTML = renderMarkdown(data.markdown);
-    panel.classList.add('open');
-  };
+This design helps air circulate in Okinawa’s hot, humid climate. Because the inside of the sleeve can be seen through its opening, the color of the lining matters as much as the outer fabric.
 
-  const showSelection = () => {
-    const main = getLanguage() === 'en' ? captionDataEn : captionData;
-    const detail = getLanguage() === 'en' ? detailCaptionDataEn : detailCaptionData;
-    if (currentSelection.type === 'main') showCaption(main[currentSelection.name] || main.man);
-    else showCaption(detail[currentSelection.costume][currentSelection.region]);
-  };
+Its beauty also reflects practical choices suited to Okinawa’s environment.
 
-  windowRef.showCostumeDescription = name => {
-    currentSelection = {type: 'main', name};
-    showSelection();
-  };
-  windowRef.showCostumeDetail = (costume, region) => {
-    const data = detailCaptionData[costume]?.[region];
-    if (!data) return false;
-    currentSelection = {type: 'detail', costume, region};
-    showSelection();
-    return true;
-  };
-  windowRef.isCostumeDescriptionOpen = () => panel.classList.contains('open');
-  onLanguageChange(() => {
-    if (currentSelection && panel.classList.contains('open')) showSelection();
-  });
+### How women wore it: ushinchī
 
-  return {
-    show: windowRef.showCostumeDescription,
-    showDetail: windowRef.showCostumeDetail,
-    applyFontSize
-  };
-}
+Women’s ryūsō includes a way of wearing the garment called *ushinchī*.
 
-if (typeof document !== 'undefined') initCaptionPanel();
+Instead of wrapping a wide sash around the waist as with a kimono from mainland Japan, the wearer tucks part of the garment into a thin cord at the waist to shape it.
+
+Without a tight band around the waist, the garment can be worn comfortably and loosely.
+
+When you look at the outfit, notice how the fabric is arranged around the waist.
+
+### How men wore it
+
+Men secured the garment with a sash around the waist, tying the knot at the front.
+
+Men also wore a headpiece called a *hachimachi*. It came in several colors, and the colors indicated differences in rank.
+
+Clothing and headwear together expressed a person’s place in society.
+
+### Could you tell someone’s status from their clothes?
+
+In the Ryukyu Kingdom, social status and rank affected the colors, patterns, and fabrics a person could wear.
+
+Clothing did more than cover the body: it also signaled a person’s position.
+
+The hachimachi worn by men is one example. Its permitted colors varied by rank.
+
+People could learn about someone’s standing by looking at their clothing and headwear.
+
+### Could everyone wear elaborate ryūsō?
+
+Take another look at the outfit.
+
+Bright colors, large patterns, and fine silk: did everyone in the old Ryukyu Kingdom dress this way?
+
+In fact, they did not.
+
+The kingdom included royalty, the *shizoku* class, and commoners. Rules about clothing differed by status and rank, particularly for the colors and scale of *bingata* patterns and for fabrics.
+
+Not every member of the shizoku class could wear the same clothes as royalty. Large, elaborate patterns were reserved for royalty and others of limited rank.
+
+Commoners could not freely use the same fine silk or ornate patterns as royalty and high-ranking shizoku.
+
+Many of the spectacular examples of ryūsō preserved today were special garments worn by royalty or people of high standing.
+
+Who, then, might have worn this outfit?
+
+Its colors, patterns, and fabric offer clues to the society of the time.
+
+### Okinawa’s dyeing and weaving traditions
+
+Dyeing and weaving traditions from across Okinawa give ryūsō its richness.
+
+One well-known example is the vividly colored *bingata*. Others include Shuri-ori, Kumejima-tsumugi, Miyako-jōfu, Yaeyama-jōfu, and bashōfu.
+
+Materials and methods vary from island to island and region to region.
+
+Even within Okinawa, different places developed their own dyeing and weaving cultures.
+
+To learn more, visit [KOGEI JAPAN (Japanese)](https://kogeijapan.com/locale/ja_JP/list/?category=1&pref=47).
+
+### Hairstyles were part of the outfit
+
+Clothing was only one part of ryūsō. Hairstyles mattered too.
+
+One traditional women’s hairstyle is the *Uchina-kanpū*: long hair is gathered and arranged into a large, elegant shape.
+
+Clothes, hairstyles, and headwear together created a complete appearance.
+
+## History
+
+Long ago, when the area now called Okinawa Prefecture was the Ryukyu Kingdom, it maintained ties with Japan’s Satsuma domain while continuing close exchanges with China.
+
+Ryukyuan dress therefore shows influences from China, Japan, and other places across the sea. Rather than simply copying them, people adapted these influences to Okinawa’s climate and way of life, developing their own clothing traditions.
+
+Few detailed records survive of what people wore before the Ryukyu Kingdom was established, so much remains unknown.
+
+Around the fifteenth and sixteenth centuries, clothing and institutions were also influenced by China’s Ming dynasty. Later, the Qing dynasty replaced the Ming, and the world around Ryukyu changed greatly.
+
+In 1609, the Satsuma domain invaded Ryukyu. The kingdom continued afterward, maintaining contact with China while more goods and cultural influences also arrived from Japan.
+
+Over these long exchanges, distinct Ryukyuan garment shapes and ways of wearing them gradually took form.
+
+In the late seventeenth century, distinctions between shizoku and commoners became more clearly reflected in regulations. During the eighteenth century, official ranks and the royal government’s institutions were defined in greater detail.
+
+In 1857, the royal government issued the *Ifuku-sadame*, rules that included clothing appropriate to social status.
+
+People could not simply choose any color or pattern they liked. The fabrics and designs they could use depended on their status and rank.
+
+For *bingata* in particular, people of shizoku status or higher could wear it, while large, elaborate patterns were reserved for a smaller group such as royalty.
+
+When you see a colorful ryūsō today, look beyond its beauty and ask who would have been allowed to wear it.
+
+A single garment can reveal both the culture of the Ryukyu Kingdom and the structure of its society.`;
+
+const yanbaruMarkdownEn = `### A flightless bird runs through the forest
+
+The Yanbaru rail has wings, but it can hardly fly.
+
+Why would a bird stop flying? In the forests of Yanbaru, there were originally few predators threatening birds on the ground, so there was little need to escape by air. Over a long time, the rail adapted to life on the forest floor. Today it walks among fallen leaves, searching for insects, earthworms, snails, and other food.
+
+You can find this bird almost nowhere else in the world. The Yanbaru rail is **a species found only in northern Okinawa Island**. It was described as a new species in 1981. A bird previously unknown to science had been living close to human communities.
+
+Living on the ground, however, also became a serious weakness. Predation by mongooses and cats brought by people, road accidents, and changes to the forest have threatened its survival. Conservation work continues, including habitat protection and measures against introduced species.
+
+If you ever visit the forests of Yanbaru, listen carefully. You may hear its sharp call from deep among the trees even if you never see the bird.`;
+
+const sleeveMarkdownEn = `## Sleeve
+
+Look closely at ryūsō and you will see that the sleeves are wide.
+
+Because the inside is visible through the sleeve opening, attention is paid to the lining color as well as the outer fabric.`;
+
+const captionDataEn = Object.freeze({
+  man: {name: 'Ryukyuan Dress: Ryūsō', markdown: ryusoMarkdownEn},
+  woman: {name: 'Ryukyuan Dress: Ryūsō', markdown: ryusoMarkdownEn},
+  bird: {name: 'The Yanbaru Rail', markdown: yanbaruMarkdownEn}
+});
+
+const detailCaptionDataEn = Object.freeze({
+  man: Object.freeze({
+    sleeve: {name: 'Men’s Ryūsō: Sleeve', markdown: sleeveMarkdownEn},
+    waist: {name: 'Men’s Ryūsō: Waist', markdown: `## Waist
+
+### How men wore it
+
+Men secured the garment with a sash around the waist, tying the knot at the front.`},
+    head: {name: 'Men’s Ryūsō: Headwear', markdown: `## Headwear
+
+Men wore a headpiece called a *hachimachi*. Its layered, cylindrical form was secured with a cord tied under the chin.
+
+The hachimachi was one way to express status and rank. It came in several colors, and the permitted colors depended on rank.
+
+People could learn about someone’s standing by looking at their clothing and headwear.`}
+  }),
+  woman: Object.freeze({
+    sleeve: {name: 'Women’s Ryūsō: Sleeve', markdown: sleeveMarkdownEn},
+    waist: {name: 'Women’s Ryūsō: Waist', markdown: `## Waist
+
+### How women wore it: ushinchī
+
+Women’s ryūsō includes a way of wearing the garment called *ushinchī*.
+
+Instead of wrapping a wide sash around the waist as with a kimono from mainland Japan, the wearer tucks part of the garment into a thin cord at the waist to shape it.
+
+Without a tight band around the waist, the garment can be worn comfortably and loosely.
+
+When you look at the outfit, notice how the fabric is arranged around the waist.`},
+    hair: {name: 'Women’s Ryūsō: Hair', markdown: `## Hair
+
+### Hairstyles were part of the outfit
+
+One traditional women’s hairstyle is the *Uchina-kanpū*: long hair is gathered and arranged into a large, elegant shape.`}
+  })
+});
+
+export const exhibitText = {
+  ja: {intro: introText.ja, captions: captionDataJa, details: detailCaptionDataJa},
+  en: {intro: introText.en, captions: captionDataEn, details: detailCaptionDataEn}
+};

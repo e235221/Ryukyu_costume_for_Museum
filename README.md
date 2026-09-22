@@ -38,6 +38,18 @@
 - カメラ・背景・衣装を合成したPNG写真の保存
 - 停止・再開時のカメラ、顔検出、背景処理の終了
 
+
+![UIレイアウト](./assets/images/UI_image.png)
+
+
+### 展示内容を変更する場所
+
+- **画像と選択ボタン名**：[exhibit-settings.mjs](exhibit-settings.mjs) の `outfits`・`backgrounds`。利用者が画像設定を編集するファイルはこれ1つです。
+- **開始画面の導入文と展示キャプション**：[exhibit-text.mjs](exhibit-text.mjs) の `introText` と `exhibitText.ja/en` 内の `captions`・`details`。
+
+既存の選択肢を差し替えるだけなら、HTMLや表示処理のファイルを編集する必要はありません。具体的な手順は下の「展示内容の差し替え」を参照してください。
+
+
 ## 使用技術
 
 | 分類 | 技術 | 用途・状況 |
@@ -53,7 +65,7 @@
 | Authentication | なし | アカウント機能なし |
 | Infrastructure | Python標準HTTPサーバー | ローカル起動 |
 | Infrastructure | GitHub Pagesを想定 | HTTPSでの静的サイト公開。未設定 |
-| CI/CD | GitHub Actionsを候補 | `files/`から公開用ファイルを選んでPagesへ配置。未実装 |
+| CI/CD | GitHub Actionsを候補 | プロジェクト直下から公開用ファイルを選んでPagesへ配置。未実装 |
 | Testing | Node.js標準ライブラリ | DOM・Canvas・追跡ロジックの模擬テスト |
 | Testing | Chrome Headless | キャプションや画像デコードの実ブラウザ確認 |
 | Development Tools | Git / GitHub | バージョン管理とIssue管理 |
@@ -91,6 +103,7 @@ CDNからMediaPipeのJavaScript、WASM、学習済みモデルを読み込みま
 ### Vanilla JavaScript・ビルド不要構成
 
 - 展示用PCで依存パッケージをインストールせず、静的サーバーだけで起動できることを重視しました。
+- 展示の画像設定と文章はブラウザが直接読み込める`.mjs`ファイルに分け、ビルドせずにファイルを編集・再読み込みするだけで更新できるようにしました。
 - Reactなどのフレームワークも候補になりますが、画面数が少なく、主要処理がCanvasとMediaPipeで完結するため採用していません。
 - メリットは配布と起動が簡単なことです。デメリットは、大規模化した場合にUI状態管理やモジュール分割を手動で設計する必要があることです。
 - 多言語化も外部サービスを使わず、固定の日本語・英語テキストとキャプションデータを切り替えます。カメラ映像や入力内容を翻訳サービスへ送信しません。
@@ -100,35 +113,17 @@ CDNからMediaPipeのJavaScript、WASM、学習済みモデルを読み込みま
 ```text
 博物館AR/
 ├── ARを起動.command               # macOS用ローカル起動スクリプト
-└── files/
-    ├── index.html                 # 画面構造と操作UI
-    ├── assets/
-    │   ├── css/
-    │   │   └── app.css            # 画面全体のスタイル
-    │   ├── js/
-    │   │   ├── multiface.mjs      # カメラ・フレーム進行と各moduleの調整
-    │   │   ├── face-slots.mjs     # 人物番号の追跡
-    │   │   ├── background.js      # 人物切り抜きと背景合成
-    │   │   ├── photo-capture.mjs  # 撮影用レイヤー合成
-    │   │   ├── assignment-controller.mjs # 人物・衣装・部位モードのUI状態
-    │   │   ├── costume-overlay.mjs # 衣装描画と部位操作の統合
-    │   │   ├── costume-details.mjs # 衣装部位の座標判定と滞在時間
-    │   │   ├── vision-models.mjs  # MediaPipeモデルの共有読込とGPU/CPU切替
-    │   │   ├── language.mjs       # 日本語・英語のUI文字列と切替
-    │   │   ├── hint-tour.mjs      # 操作別の吹き出し案内
-    │   │   ├── caption-data-en.mjs # 英語の展示解説
-    │   │   └── caption-panel.mjs  # 日本語の解説、Markdown表示、文字サイズ
-    │   └── images/
-    │       ├── costumes/          # 男性・女性の琉装PNG
-    │       ├── face-overlays/     # ヤンバルクイナPNG
-    │       └── backgrounds/       # 海・石畳・首里城の背景
-    ├── tests/                     # Node.jsによる自動テスト
-    ├── reference/
-    │   ├── generated/             # 生成画像などの参考素材
-    │   ├── originals/             # 加工前・比較用画像
-    │   └── legacy/                # 現行アプリで未使用の旧実装
-    ├── README.md
-    └── LOG.md
+├── README.md                     # 概要・起動方法・展示内容の編集手順
+├── LOG.md                        # 指示と作業結果の履歴
+├── index.html                    # 画面構造と操作UI
+├── exhibit-settings.mjs          # 画像パス・選択ボタン名・位置合わせ
+├── exhibit-text.mjs              # 導入文と日英の展示キャプション
+├── assets/
+│   ├── css/app.css               # 画面全体のスタイル
+│   ├── js/                       # 顔追跡・背景・衣装・UIの各モジュール
+│   └── images/                   # 衣装・顔ハメ・背景画像
+├── tests/                        # Node.jsによる自動テスト
+└── reference/                    # 参考素材と旧実装
 ```
 
 ブラウザが読み込むファイルは`assets/`、検査コードは`tests/`、現行アプリで使用しない素材と旧実装は`reference/`に分けています。新しい画像を追加する場合も、用途に対応する`assets/images/`配下へ配置してください。
@@ -165,10 +160,12 @@ macOSでは、プロジェクト直下の`ARを起動.command`をダブルクリ
 
 起動後に表示されるターミナルは、ARを利用している間は閉じないでください。ターミナルを閉じるか`Control + C`を押すとローカルサーバーが停止し、`http://127.0.0.1:8000/`へ接続できなくなります。
 
+すでに8000番ポートでこのアプリが起動している状態で起動スクリプトをもう一度実行した場合は、二重起動せず、起動済みであることを表示して終了します。別のアプリケーションが8000番ポートを使っている場合は、そのアプリケーションを終了してから再実行してください。
+
 ターミナルから起動する場合は、プロジェクト直下で次を実行します。
 
 ```sh
-python3 -m http.server 8000 --bind 127.0.0.1 --directory files
+python3 -m http.server 8000 --bind 127.0.0.1
 ```
 
 ブラウザで次のURLを開きます。
@@ -184,20 +181,21 @@ http://127.0.0.1:8000/
 プロジェクト直下で実行します。
 
 ```sh
-node files/tests/check-multiface.mjs
-node files/tests/check-assignments.mjs
-node files/tests/check-background.cjs
-node files/tests/check-photo-capture.mjs
-node files/tests/check-caption.mjs
-node files/tests/check-costume-details.mjs
-node files/tests/check-costume-overlay.mjs
-node files/tests/check-vision-models.mjs
-node files/tests/check-layout.mjs
-node files/tests/check-language.mjs
-node files/tests/check-hints.mjs
+node tests/check-multiface.mjs
+node tests/check-assignments.mjs
+node tests/check-background.cjs
+node tests/check-photo-capture.mjs
+node tests/check-caption.mjs
+node tests/check-costume-details.mjs
+node tests/check-costume-overlay.mjs
+node tests/check-vision-models.mjs
+node tests/check-layout.mjs
+node tests/check-language.mjs
+node tests/check-hints.mjs
+node tests/check-exhibit-content.mjs
 ```
 
-テストは追跡、人物別割当、未検出ボタンの無効化、背景切替、撮影レイヤー、Markdownキャプション、部位タッチ・指先滞在からキャプション表示まで、操作帯の配置、日英切替、ヒント案内を検査します。顔入力、DOM、Canvas、背景モデルの一部は模擬値であり、実カメラの精度・性能を保証するものではありません。
+テストは追跡、人物別割当、未検出ボタンの無効化、背景切替、撮影レイヤー、Markdownキャプション、部位タッチ・指先滞在からキャプション表示まで、操作帯の配置、日英切替、ヒント案内、展示設定と文章ファイルからの反映を検査します。顔入力、DOM、Canvas、背景モデルの一部は模擬値であり、実カメラの精度・性能を保証するものではありません。
 
 ## Usage
 
@@ -216,7 +214,6 @@ node files/tests/check-hints.mjs
 10. 下部の「撮影」を押すと、カメラ、背景、衣装を合成したPNGを保存します。広い画面ではドック右端、狭い画面では下部中央にあります。指先のマークや部位解説の案内は保存画像に含まれません。
 11. 左上の矢印を押すと、カメラ、顔検出、手検出、背景処理を停止して開始画面へ戻ります。言語は最初の画面で再選択できます。
 
-英語の展示解説は日本語本文をもとにした翻訳です。博物館での正式な公開前に、歴史・文化用語の表現を担当者が確認してください。
 
 ### 画面レイアウト
 
@@ -232,47 +229,57 @@ node files/tests/check-hints.mjs
 - 操作ボタン、人物番号、認識人数、ガイド、メッセージは保存画像に含めません。
 - 保存先やダウンロード確認はブラウザの設定に従います。
 
-### 顔ハメ画像・背景画像の差し替え
+### 展示内容の差し替え
 
-既存の選択肢の画像だけを変える場合は、以下のファイルを**同じ名前・同じ形式で上書き**します。ボタン名やJavaScriptを変更する必要はありません。元画像は上書き前に別の場所へ控えてください。
+#### 画像と選択ボタン名
 
-| 画面の選択肢 | 差し替えるファイル（`files/`からの相対パス） | 画像の目安 |
+編集するファイルは **[exhibit-settings.mjs](exhibit-settings.mjs) だけ**です。`outfits` は男性・女性の琉装とヤンバルクイナ、`backgrounds` は4種類の背景に対応します。各項目の `name.ja`・`name.en` がボタン名、`image` が画像パスです。パスはプロジェクト直下からの相対パスで指定します。
+
+| 設定のキー | 初期状態のボタン | 初期状態の画像 |
 |---|---|---|
-| 男性の琉装 | `assets/images/costumes/orion-man.png` | 透過PNG、2732×4096、顔穴を元画像と同じ位置に配置 |
-| 女性の琉装 | `assets/images/costumes/orion-woman.png` | 透過PNG、1366×2048、顔穴を元画像と同じ位置に配置 |
-| ヤンバルクイナ | `assets/images/face-overlays/yanbaru-kuina.png` | 透過PNG、1254×1254、顔へ合わせる頭部を元画像と同じ位置に配置 |
-| 海 | `assets/images/backgrounds/beach.jpg` | JPEG。サイズは自由、画面比率に応じて中央から切り抜かれる |
-| 石畳 | `assets/images/backgrounds/ishidatami.jpg` | 同上 |
-| 首里城（復元前） | `assets/images/backgrounds/shurijo-before.jpg` | 同上 |
-| 首里城（復元後） | `assets/images/backgrounds/shurijo-after.jpg` | 同上 |
+| `outfits.man` | 男性の琉装 | `assets/images/costumes/orion-man.png` |
+| `outfits.woman` | 女性の琉装 | `assets/images/costumes/orion-woman.png` |
+| `outfits.bird` | ヤンバルクイナ | `assets/images/face-overlays/yanbaru-kuina.png` |
+| `backgrounds.beach` | 海 | `assets/images/backgrounds/beach.jpg` |
+| `backgrounds.stone` | 石畳 | `assets/images/backgrounds/ishidatami.jpg` |
+| `backgrounds['castle-before']` | 首里城（復元前） | `assets/images/backgrounds/shurijo-before.jpg` |
+| `backgrounds['castle-after']` | 首里城（復元後） | `assets/images/backgrounds/shurijo-after.jpg` |
 
-1. 対象の画像を表のパスへ上書きします。衣装・顔画像は背景を透過させ、顔が見える穴も透明にしてください。
-2. アプリを再読み込みし、対象の選択肢を選んで位置・切り抜き・撮影結果を確認します。古い画像が表示される場合は、下の「キャッシュ更新」を参照してください。
-3. 衣装を交換した場合は「部位解説」で頭／髪・袖・腰のタッチ位置も確認します。画像の内容を変えた場合は、必要に応じて日本語・英語の展示解説も更新してください。
+1. 新しい画像を `assets/images/` の適切な場所へ置きます。衣装・顔画像は、背景と顔が見える穴を透明にしたPNGを使います。背景画像にはJPEGやPNGを使えます。
+2. `exhibit-settings.mjs` の対象項目で、`image` を新しい画像のパスへ、`name.ja`・`name.en` を表示したい名前へ変更します。ヤンバルクイナの短いボタン表示も変える場合は `shortName.ja`・`shortName.en` を変更します。`man` や `beach` などのキーは変えません。
+3. 再読み込み後、対象ボタン、顔ハメ位置、背景の切り抜き、撮影画像を確認します。衣装を交換した場合は「部位解説」のタッチ位置も確認します。
 
-画像の縦横比や顔穴・頭部の位置が元画像と異なる場合は、ファイルの上書きだけでは正しく合いません。衣装は描画時に683×1024相当へ縮小され、男性の顔穴はその座標で`(306,189)〜(371,268)`、女性は`(313,239)〜(375,315)`です。衣装の顔合わせは`assets/js/costume-overlay.mjs`の`COSTUME_HOLES`、袖・腰・頭／髪のタッチ判定は`assets/js/costume-details.mjs`の`COSTUME_REGIONS`を調整します。ヤンバルクイナの画像サイズ・頭部位置が変わる場合は`costume-overlay.mjs`の`drawCostume`内のヤンバルクイナ描画値を調整します。
+「人物1〜3」は画像の種類ではありません。各人物が `outfits` の同じ選択肢から衣装・顔画像を選びます。背景は画面比率に合わせて中央から切り抜かれます。
 
-別のファイル名を使う場合は、衣装・顔画像の参照先を`index.html`の`img-man`・`img-woman`・`img-bird`で、背景画像の参照先を`assets/js/background.js`冒頭の`images`で変更します。選択肢そのものを増やす場合は、画面・表示名・描画処理の追加も必要です。
+元画像と縦横比や顔穴・頭部位置が違う場合も、同じファイル下部の `alignment` だけで調整できます。男性・女性は `size`（座標の基準サイズ）、`faceHole`（顔穴の中心と幅・高さ）、`regions`（頭／髪・袖・腰のタッチ範囲）を設定します。ヤンバルクイナは `size`、`headBounds`、`headScale` を設定します。既定の男性・女性は683×1024、ヤンバルクイナは1254×1254を座標の基準にしています。既存の選択肢を差し替える用途です。選択肢の数を増やす場合は画面と処理の追加が必要です。
+
+#### 導入文とキャプション
+
+編集するファイルは **[exhibit-text.mjs](exhibit-text.mjs) だけ**です。開始画面の見出し・サブタイトル・3行の導入文は `introText.ja` と `introText.en` にあります。展示解説の見出しと本文は `exhibitText.ja.captions`・`exhibitText.en.captions`、袖・腰・頭／髪の解説は `exhibitText.ja.details`・`exhibitText.en.details` にあります。ファイル内の共通本文（`ryusoMarkdownJa/En`、`sleeveMarkdownJa/En` など）を編集すると、対応するキャプションへ反映されます。
+
+`man`・`woman`・`bird` や `sleeve`・`waist`・`head`・`hair` のキーは画面との対応に使うため、変更しないでください。
+
+本文はバッククォート（`` ` ``）で囲まれたMarkdown文字列です。段落は空行、見出しは `##`・`###`、強調は `**太字**`・`*斜体*`、リンクは `[表示名](https://...)` で書けます。日本語と英語の両方を表示する場合は両方の文章を更新してください。画像の題材を変えた場合は、対応するキャプションも確認します。
 
 ### キャッシュ更新
 
 画像やJavaScriptを変更したのに表示が変わらない場合は、Macで`Command + Shift + R`を押して強制再読み込みします。必要に応じてブラウザのサイトデータを削除してください。
 
-`assets/css/app.css`、`assets/js/background.js`、`assets/js/caption-panel.mjs`、`assets/js/multiface.mjs`を更新した場合は、`index.html`の読込URLにある`?v=`も変更し、旧ファイルが再利用されないようにします。`language.mjs`や`caption-data-en.mjs`などのimport先を変更した場合は、参照元のimportにある`?v=`と、それを読み込むHTMLの`?v=`も更新します。
+`exhibit-settings.mjs`と`exhibit-text.mjs`の編集では、HTMLの`?v=`を変更する必要はありません。再読み込みで反映されないときだけ強制再読み込みしてください。
+
+`assets/css/app.css`、`assets/js/background.js`、`assets/js/caption-panel.mjs`、`assets/js/multiface.mjs`を更新した場合は、`index.html`の読込URLにある`?v=`も変更し、旧ファイルが再利用されないようにします。`language.mjs`などのimport先を変更した場合は、参照元のimportにある`?v=`と、それを読み込むHTMLの`?v=`も更新します。
 
 
 ### 文献・画像利用について
 
 画像を引用し，一部加工
-https://www.orionbeer.co.jp/story/ryuso/
-背景引用
-https://www.kkday.com/ja/blog/38226/asia-japan-okinawa-beach-2?srsltid=AU7gw4VbkjWKJ-9N6qkfT87X-mFMCF_0iPPDUi2eq9NcEw52HwMdusY4
-https://www.okinawastory.jp/spot/1360
-https://www.okinawatimes.co.jp/articles/-/1644631
+[Orion | 琉球王国の華やかな風情をまとう民族衣装「琉装」](https://www.orionbeer.co.jp/story/ryuso/)
+
+背景引用：
+[おきなわ物語 | 首里金城町の石畳道(県指定史跡)](https://www.okinawastory.jp/spot/1360)・[沖縄タイムズ | 首里城正殿外観]https://www.okinawatimes.co.jp/articles/-/1644631
 
 
-キャプションの参考文献
-https://www.weblio.jp/content/%E7%90%89%E8%A3%85
+キャプションの参考文献：[weblio辞書 | 琉装](https://www.weblio.jp/content/%E7%90%89%E8%A3%85)
 
 
 ### 注意
@@ -283,4 +290,3 @@ https://www.weblio.jp/content/%E7%90%89%E8%A3%85
 - 2D画像のため、全身の姿勢や腕の前後関係に合わせた変形は行いません。
 - 背景処理と顔追跡が別周期のため、速い動きでは一時的にずれる場合があります。
 - 手認識は部位解説モード中だけ最大2本・約6fpsで行います。手が隠れている場合や指先が小さい場合は、画面タッチを利用してください。
-- 長時間運転時の性能、SafariとChromeの全端末、実カメラからの写真保存は継続して確認が必要です。

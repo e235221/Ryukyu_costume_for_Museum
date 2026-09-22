@@ -1,17 +1,15 @@
-export const uiTranslations = Object.freeze({
+import {exhibitSettings} from '../../exhibit-settings.mjs';
+import {exhibitText} from '../../exhibit-text.mjs';
+
+const baseTranslations = Object.freeze({
   ja: Object.freeze({
-    appTitle: '琉球衣装AR体験', subtitle: 'Ryukyu Costume AR Experience',
-    landingLine1: '琉球王国時代の衣装をARで体験できるアプリです。',
-    landingLine2: 'カメラに顔を映すと、琉装やヤンバルクイナの姿を楽しめます。',
-    landingLine3: '衣装や沖縄の自然についての解説も確認できます。',
     chooseLanguage: '表示言語', start: 'AR体験を始める',
     cameraNote: '※ カメラへのアクセス許可が必要です。', portraitNote: '※ スマートフォンでは縦向きを推奨します。',
     arArea: 'AR体験画面', loading: 'カメラを起動中...', back: 'AR体験を終了', info: '解説を表示', infoShort: '解説',
     dock: '人物ごとの衣装', people: '人物', personGroup: '衣装を変更する人物', outfit: '衣装',
     outfitGroup: '選択した人物の衣装・顔。横にスクロールできます',
-    outfitMan: '男性の琉装', outfitWoman: '女性の琉装', birdShort: 'クイナ', birdFull: 'ヤンバルクイナ', none: 'なし',
+    none: 'なし',
     backgroundChange: '背景変更', background: '背景', backgroundGroup: '背景の選択', backgroundSummary: '背景：{background}', backgroundChoice: '：{background}',
-    beach: '海', stone: '石畳', castleBefore: '首里城（復元前）', castleAfter: '首里城（復元後）',
     detailMode: '部位解説', capture: '撮影', settings: '設定', personSettings: '人物設定', resetPeople: '番号を左から振り直す',
     descriptionPanel: '展示解説', captionTitle: '衣装解説', closeDescription: '解説を閉じる', fontSize: '文字サイズ', fontSizeInput: 'キャプションの文字サイズ',
     person: '人物{number}', personUndetected: '人物{number}（未検出）', assignmentFor: '人物{number} の衣装・顔',
@@ -34,18 +32,13 @@ export const uiTranslations = Object.freeze({
     regionSleeve: '袖', regionWaist: '腰', regionHead: '頭', regionHair: '髪'
   }),
   en: Object.freeze({
-    appTitle: 'Ryukyuan Costume AR', subtitle: 'Discover Ryukyuan culture through AR',
-    landingLine1: 'Experience clothing from the Ryukyu Kingdom through AR.',
-    landingLine2: 'Show your face to the camera to try Ryukyuan dress or become a Yanbaru rail.',
-    landingLine3: 'Explore explanations of the clothing and Okinawa’s nature.',
     chooseLanguage: 'Language', start: 'Start AR experience',
     cameraNote: '※ Camera access is required.', portraitNote: '※ Portrait orientation is recommended on phones.',
     arArea: 'AR experience', loading: 'Starting camera...', back: 'Exit AR experience', info: 'Open information', infoShort: 'Info',
     dock: 'Costume for each person', people: 'People', personGroup: 'Choose a person to dress', outfit: 'Outfit',
     outfitGroup: 'Choose an outfit or face. Scroll horizontally for more options',
-    outfitMan: 'Men’s Ryūsō', outfitWoman: 'Women’s Ryūsō', birdShort: 'Rail', birdFull: 'Yanbaru rail', none: 'None',
+    none: 'None',
     backgroundChange: 'Background', background: 'Backdrop', backgroundGroup: 'Choose a background', backgroundSummary: 'Background: {background}', backgroundChoice: ': {background}',
-    beach: 'Beach', stone: 'Stone path', castleBefore: 'Shuri Castle (before restoration)', castleAfter: 'Shuri Castle (after restoration)',
     detailMode: 'Explore details', capture: 'Take photo', settings: 'Settings', personSettings: 'Person settings', resetPeople: 'Renumber from left',
     descriptionPanel: 'Exhibit information', captionTitle: 'Costume information', closeDescription: 'Close information', fontSize: 'Text size', fontSizeInput: 'Caption text size',
     person: 'Person {number}', personUndetected: 'Person {number} (not detected)', assignmentFor: 'Person {number} — outfit and face',
@@ -68,6 +61,33 @@ export const uiTranslations = Object.freeze({
     regionSleeve: 'Sleeve', regionWaist: 'Waist', regionHead: 'Headwear', regionHair: 'Hair'
   })
 });
+
+function configuredLabels(language) {
+  const intro = exhibitText[language].intro;
+  const outfits = exhibitSettings.outfits;
+  const backgrounds = exhibitSettings.backgrounds;
+  return {
+    appTitle: intro.title,
+    subtitle: intro.subtitle,
+    landingLine1: intro.lines[0],
+    landingLine2: intro.lines[1],
+    landingLine3: intro.lines[2],
+    outfitMan: outfits.man.name[language],
+    outfitWoman: outfits.woman.name[language],
+    birdShort: outfits.bird.shortName[language],
+    birdFull: outfits.bird.name[language],
+    beach: backgrounds.beach.name[language],
+    stone: backgrounds.stone.name[language],
+    castleBefore: backgrounds['castle-before'].name[language],
+    castleAfter: backgrounds['castle-after'].name[language]
+  };
+}
+
+export const uiTranslations = Object.freeze(Object.fromEntries(
+  Object.entries(baseTranslations).map(([language, strings]) => [
+    language, Object.freeze({...strings, ...configuredLabels(language)})
+  ])
+));
 
 let currentLanguage = 'ja';
 const listeners = new Set();

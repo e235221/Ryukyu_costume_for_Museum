@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {initHintTour} from '../assets/js/hint-tour.mjs';
-import {setLanguage} from '../assets/js/language.mjs?v=20260922-2';
+import {setLanguage} from '../assets/js/language.mjs?v=20260922-3';
 
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 assert.match(html, /id="hintBtn"[^>]*aria-controls="hintBubble"/);

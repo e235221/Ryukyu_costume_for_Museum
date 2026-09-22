@@ -1,8 +1,11 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
-import {getLanguage, initLanguage, setLanguage, uiTranslations} from '../assets/js/language.mjs?v=20260922-2';
+import {getLanguage, initLanguage, setLanguage, uiTranslations} from '../assets/js/language.mjs?v=20260922-3';
 import {initCaptionPanel, renderMarkdown} from '../assets/js/caption-panel.mjs';
-import {captionDataEn, detailCaptionDataEn} from '../assets/js/caption-data-en.mjs?v=20260922-1';
+import {exhibitText} from '../exhibit-text.mjs';
+
+const captionDataEn = exhibitText.en.captions;
+const detailCaptionDataEn = exhibitText.en.details;
 
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
 const keys = [...html.matchAll(/data-i18n(?:-aria-label)?="([^"]+)"/g)].map(match => match[1]);

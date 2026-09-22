@@ -1,12 +1,9 @@
+import {exhibitSettings} from '../../exhibit-settings.mjs';
+
 // Local compositing; camera frames are processed on this device.
 (() => {
   const CDN = 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation@0.1.1675465747/';
-  const images = {
-    beach: 'assets/images/backgrounds/beach.jpg',
-    stone: 'assets/images/backgrounds/ishidatami.jpg',
-    'castle-before': 'assets/images/backgrounds/shurijo-before.jpg',
-    'castle-after': 'assets/images/backgrounds/shurijo-after.jpg'
-  };
+  const backgroundOptions = exhibitSettings.backgrounds;
   let video, model, modelPromise, selected = 'none', background, timer, busy = false, generation = 0, job;
   let messageKey = null, messageFallback = '';
   const canvas = document.getElementById('backgroundCanvas');
@@ -15,11 +12,11 @@
   const summary = document.getElementById('backgroundSummary');
   const choice = document.getElementById('backgroundChoice');
   const buttons = [...document.querySelectorAll('[data-background]')];
-  const labels = {none: 'なし', beach: '海', stone: '石畳', 'castle-before': '首里城（復元前）', 'castle-after': '首里城（復元後）'};
   const labelKeys = {none: 'none', beach: 'beach', stone: 'stone', 'castle-before': 'castleBefore', 'castle-after': 'castleAfter'};
   const translate = (key, fallback, values) => window.appLanguage?.t(key, values) ?? fallback;
   function updateSummary() {
-    const current = translate(labelKeys[selected], labels[selected]);
+    const fallback = selected === 'none' ? 'なし' : backgroundOptions[selected].name.ja;
+    const current = translate(labelKeys[selected], fallback);
     summary.setAttribute('aria-label', translate('backgroundSummary', `背景：${current}`, {background: current}));
     choice.textContent = translate('backgroundChoice', `：${current}`, {background: current});
   }
@@ -99,7 +96,7 @@
     setMessage(name === 'none' ? null : 'backgroundPreparing', '背景を準備中...');
     if (name === 'none') return;
     try {
-      const image = new Image(); image.src = images[name];
+      const image = new Image(); image.src = backgroundOptions[name].image;
       await Promise.all([image.decode(), loadModel()]);
       if (token !== generation) return;
       background = image; run();

@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import {FaceSlots} from '../assets/js/face-slots.mjs';
 import {AssignmentController} from '../assets/js/assignment-controller.mjs';
-import {setLanguage} from '../assets/js/language.mjs?v=20260922-2';
+import {setLanguage} from '../assets/js/language.mjs?v=20260922-3';
 
 class Element {
   constructor(dataset = {}) {

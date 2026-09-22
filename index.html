@@ -3,17 +3,17 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>琉球衣装AR体験</title>
+  <title>AR体験</title>
   <link rel="stylesheet" href="assets/css/app.css?v=20260922-5">
 </head>
 <body>
   <main id="landing">
-    <h1 data-i18n="appTitle">琉球衣装AR体験</h1>
-    <p class="subtitle" data-i18n="subtitle">Ryukyu Costume AR Experience</p>
+    <h1 data-i18n="appTitle"></h1>
+    <p class="subtitle" data-i18n="subtitle"></p>
     <p class="landing-desc">
-      <span data-i18n="landingLine1">琉球王国時代の衣装をARで体験できるアプリです。</span>
-      <span data-i18n="landingLine2">カメラに顔を映すと、琉装やヤンバルクイナの姿を楽しめます。</span>
-      <span data-i18n="landingLine3">衣装や沖縄の自然についての解説も確認できます。</span>
+      <span data-i18n="landingLine1"></span>
+      <span data-i18n="landingLine2"></span>
+      <span data-i18n="landingLine3"></span>
     </p>
     <div class="language-picker" role="group" aria-label="表示言語" data-i18n-aria-label="chooseLanguage">
       <span class="language-picker-label" data-i18n="chooseLanguage">表示言語</span>
@@ -45,9 +45,9 @@
     <p id="detailHint" role="status" aria-live="polite" hidden></p>
 
     <div hidden>
-      <img id="img-man" src="assets/images/costumes/orion-man.png" alt="">
-      <img id="img-woman" src="assets/images/costumes/orion-woman.png" alt="">
-      <img id="img-bird" src="assets/images/face-overlays/yanbaru-kuina.png" alt="">
+      <img id="img-man" alt="">
+      <img id="img-woman" alt="">
+      <img id="img-bird" alt="">
     </div>
     <canvas id="costumeCanvas"></canvas>
 
@@ -71,11 +71,11 @@
       <div class="dock-section outfit-section">
         <div class="dock-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 3 4 2 4-2 5 4-2 5-3-1v10H8V11l-3 1-2-5z"/></svg><span data-i18n="outfit">衣装</span></div>
         <details class="outfit-picker" open>
-          <summary id="outfitSummary" aria-label="人物1の衣装：男性の琉装"><span data-i18n="outfit">衣装</span><span id="outfitChoice">：男性の琉装</span></summary>
+          <summary id="outfitSummary" aria-label="衣装"><span data-i18n="outfit">衣装</span><span id="outfitChoice"></span></summary>
           <div class="outfit-options" role="group" aria-label="選択した人物の衣装・顔。横にスクロールできます" data-i18n-aria-label="outfitGroup">
-            <button type="button" data-costume="man" aria-pressed="true" aria-label="男性の琉装" data-i18n="outfitMan" data-i18n-aria-label="outfitMan">男性の琉装</button>
-            <button type="button" data-costume="woman" aria-pressed="false" aria-label="女性の琉装" data-i18n="outfitWoman" data-i18n-aria-label="outfitWoman">女性の琉装</button>
-            <button type="button" data-costume="bird" aria-pressed="false" aria-label="ヤンバルクイナ" data-i18n="birdShort" data-i18n-aria-label="birdFull">クイナ</button>
+            <button type="button" data-costume="man" aria-pressed="true" data-i18n="outfitMan" data-i18n-aria-label="outfitMan"></button>
+            <button type="button" data-costume="woman" aria-pressed="false" data-i18n="outfitWoman" data-i18n-aria-label="outfitWoman"></button>
+            <button type="button" data-costume="bird" aria-pressed="false" data-i18n="birdShort" data-i18n-aria-label="birdFull"></button>
             <button type="button" data-costume="none" aria-pressed="false" data-i18n="none">なし</button>
           </div>
         </details>
@@ -86,12 +86,12 @@
           <div class="background-options" role="group" aria-label="背景の選択" data-i18n-aria-label="backgroundGroup">
             <div class="background-row">
               <button type="button" data-background="none" aria-pressed="true" data-i18n="none">なし</button>
-              <button type="button" data-background="beach" aria-pressed="false" data-i18n="beach">海</button>
-              <button type="button" data-background="stone" aria-pressed="false" data-i18n="stone">石畳</button>
+              <button type="button" data-background="beach" aria-pressed="false" data-i18n="beach"></button>
+              <button type="button" data-background="stone" aria-pressed="false" data-i18n="stone"></button>
             </div>
             <div class="background-row">
-              <button type="button" data-background="castle-before" aria-pressed="false" data-i18n="castleBefore">首里城（復元前）</button>
-              <button type="button" data-background="castle-after" aria-pressed="false" data-i18n="castleAfter">首里城（復元後）</button>
+              <button type="button" data-background="castle-before" aria-pressed="false" data-i18n="castleBefore"></button>
+              <button type="button" data-background="castle-after" aria-pressed="false" data-i18n="castleAfter"></button>
             </div>
           </div>
         </details>
@@ -123,9 +123,9 @@
     <div class="desc-body" id="descBody"></div>
   </aside>
 
-  <script src="assets/js/background.js?v=20260922-2"></script>
-  <script type="module" src="assets/js/caption-panel.mjs?v=20260922-2"></script>
-  <script type="module" src="assets/js/multiface.mjs?v=20260922-6"></script>
-  <script type="module" src="assets/js/hint-tour.mjs?v=20260922-1"></script>
+  <script type="module" src="assets/js/background.js?v=20260922-4"></script>
+  <script type="module" src="assets/js/caption-panel.mjs?v=20260922-4"></script>
+  <script type="module" src="assets/js/multiface.mjs?v=20260922-7"></script>
+  <script type="module" src="assets/js/hint-tour.mjs?v=20260922-3"></script>
 </body>
 </html>

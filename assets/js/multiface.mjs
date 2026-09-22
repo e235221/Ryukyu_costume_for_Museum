@@ -1,9 +1,10 @@
 import {FaceSlots, faceGeometry} from './face-slots.mjs';
-import {composePhoto, photoFilename} from './photo-capture.mjs?v=20260922-2';
-import {AssignmentController} from './assignment-controller.mjs?v=20260922-5';
-import {CostumeOverlay} from './costume-overlay.mjs?v=20260922-3';
+import {composePhoto, photoFilename} from './photo-capture.mjs?v=20260922-3';
+import {AssignmentController} from './assignment-controller.mjs?v=20260922-6';
+import {CostumeOverlay} from './costume-overlay.mjs?v=20260922-4';
 import {visionModels} from './vision-models.mjs?v=20260921-1';
-import {t} from './language.mjs?v=20260922-2';
+import {t} from './language.mjs?v=20260922-3';
+import {exhibitSettings} from '../../exhibit-settings.mjs';
 
 const FACE_INTERVAL_MS = 80;
 const HAND_INTERVAL_MS = 160;
@@ -15,6 +16,7 @@ const loading = $('loadingOverlay');
 const startButton = $('startBtn');
 const photoButton = $('photoBtn');
 const costumeImages = {man: $('img-man'), woman: $('img-woman'), bird: $('img-bird')};
+for (const [kind, image] of Object.entries(costumeImages)) image.src = exhibitSettings.outfits[kind].image;
 const slots = new FaceSlots(3);
 
 let video = null;

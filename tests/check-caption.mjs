@@ -1,11 +1,15 @@
 import fs from 'node:fs';
 import assert from 'node:assert/strict';
-import {captionData, detailCaptionData, initCaptionPanel, renderMarkdown} from '../assets/js/caption-panel.mjs';
+import {initCaptionPanel, renderMarkdown} from '../assets/js/caption-panel.mjs';
+import {exhibitText} from '../exhibit-text.mjs';
+
+const captionData = exhibitText.ja.captions;
+const detailCaptionData = exhibitText.ja.details;
 
 const html = fs.readFileSync(new URL('../index.html', import.meta.url), 'utf8');
-assert.match(html, /data-costume="man"[^>]*aria-label="男性の琉装"[^>]*>男性の琉装<\/button>/);
-assert.match(html, /data-costume="woman"[^>]*aria-label="女性の琉装"[^>]*>女性の琉装<\/button>/);
-assert.match(html, /data-costume="bird"[^>]*aria-label="ヤンバルクイナ"[^>]*>クイナ<\/button>/);
+assert.match(html, /data-costume="man"[^>]*data-i18n="outfitMan"[^>]*data-i18n-aria-label="outfitMan"/);
+assert.match(html, /data-costume="woman"[^>]*data-i18n="outfitWoman"[^>]*data-i18n-aria-label="outfitWoman"/);
+assert.match(html, /data-costume="bird"[^>]*data-i18n="birdShort"[^>]*data-i18n-aria-label="birdFull"/);
 assert.match(html, /id="detailModeLabel">部位解説<\/span>/);
 assert.match(html, /id="detailHint"/);
 assert.doesNotMatch(html, /琉球男性衣装（オリオン）|琉球女性衣装（オリオン）/);

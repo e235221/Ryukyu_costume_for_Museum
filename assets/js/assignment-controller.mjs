@@ -1,4 +1,4 @@
-import {onLanguageChange, t} from './language.mjs?v=20260922-2';
+import {onLanguageChange, t} from './language.mjs?v=20260922-3';
 
 const isRyuso = kind => kind === 'man' || kind === 'woman';
 const outfitNameKeys = {man: 'outfitMan', woman: 'outfitWoman', bird: 'birdFull', none: 'none'};

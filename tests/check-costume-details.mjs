@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {CostumeDetailExplorer, findCostumeDetail} from '../assets/js/costume-details.mjs';
+import {exhibitSettings} from '../exhibit-settings.mjs';
 
 const placement = (kind, personId = 0) => ({
   personId,
@@ -43,5 +44,11 @@ assert.equal(state.activated, null, 'cooldown prevents repeated activation');
 
 const touched = explorer.activate(screenPoint({x: 330, y: 520}, man), [man], 4000);
 assert.equal(touched.region, 'waist', 'touch activates a region immediately');
+
+const headBox = exhibitSettings.alignment.man.regions[0].boxes[0];
+const originalHeadX = headBox.x;
+headBox.x = 0;
+assert.equal(findCostumeDetail(screenPoint({x: 10, y: 160}, man), [man]).region, 'head', 'edited region coordinates must be used');
+headBox.x = originalHeadX;
 
 console.log('PASS: gender-specific costume regions, transformed hit testing, dwell activation, cooldown and touch activation.');

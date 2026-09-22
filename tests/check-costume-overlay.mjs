@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {CostumeOverlay} from '../assets/js/costume-overlay.mjs';
 import {initCaptionPanel} from '../assets/js/caption-panel.mjs';
+import {exhibitSettings} from '../exhibit-settings.mjs';
 
 const operations = [];
 const context = {
@@ -39,6 +40,12 @@ assert.equal(rendered.placements.length, 1);
 assert.equal(rendered.placements[0].kind, 'man');
 assert.equal(operations.find(operation => operation[0] === 'draw')[1], images.man);
 assert.equal(operations.filter(operation => operation[0] === 'save').length, operations.filter(operation => operation[0] === 'restore').length);
+
+const originalHoleX = exhibitSettings.alignment.man.faceHole.x;
+exhibitSettings.alignment.man.faceHole.x = originalHoleX + 10;
+const adjusted = overlay.render({video, slots: {slots: [slot]}, outfits: ['man'], selectedPerson: 0}, {includeLabels: false, now: 6000});
+assert.equal(adjusted.placements[0].hole.x, originalHoleX + 10, 'edited face-hole position must be used');
+exhibitSettings.alignment.man.faceHole.x = originalHoleX;
 
 const nodes = new Map();
 const node = id => {

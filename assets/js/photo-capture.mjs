@@ -1,4 +1,4 @@
-import {t} from './language.mjs?v=20260922-2';
+import {t} from './language.mjs?v=20260922-3';
 
 export function drawCover(context, image, width, height, mirror = false) {
   const sourceWidth = image.videoWidth || image.naturalWidth || image.width;

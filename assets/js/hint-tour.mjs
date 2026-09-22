@@ -1,16 +1,16 @@
-import {getLanguage, onLanguageChange} from './language.mjs?v=20260922-2';
+import {getLanguage, onLanguageChange, t} from './language.mjs?v=20260922-3';
 
 const copy = Object.freeze({
   ja: Object.freeze({
     button: '操作のヒントを表示', label: 'ヒント', close: 'ヒントを閉じる', previous: '戻る', next: '次へ', finish: '完了',
     steps: [
       {title: '人物', body: '顔が映ると番号が使えます。衣装を変えたい人物の番号を選んでください。'},
-      {title: '衣装', body: '選んだ人物に男性の琉装・女性の琉装・ヤンバルクイナを重ねます。「なし」で外せます。'},
-      {title: '背景', body: '海・石畳・首里城などの背景を選べます。「なし」で元のカメラ映像に戻ります。'},
+      {title: '衣装', body: '選んだ人物に{man}・{woman}・{bird}を重ねます。「なし」で外せます。'},
+      {title: '背景', body: '{beach}・{stone}・{castleBefore}などの背景を選べます。「なし」で元のカメラ映像に戻ります。'},
       {title: '部位解説', body: '琉装を選んでオンにすると、額付近・手首や袖・腰を指先で約1秒示すか画面をタッチして、その部分の解説を読めます。'},
       {title: '撮影', body: 'カメラ・衣装・背景を合成した写真をPNGで保存します。操作ボタンや指先の印は写真に入りません。'},
       {title: '人物設定', body: '人物の番号が入れ替わったとき、ここから左側の人を1番として振り直せます。'},
-      {title: '展示解説', body: '衣装やヤンバルクイナの解説を開きます。解説の文字サイズも変更できます。'},
+      {title: '展示解説', body: '衣装や{bird}の解説を開きます。解説の文字サイズも変更できます。'},
       {title: '終了', body: 'AR体験を終えて最初の画面へ戻ります。カメラも停止します。'}
     ]
   }),
@@ -18,12 +18,12 @@ const copy = Object.freeze({
     button: 'Show feature hints', label: 'Hints', close: 'Close hints', previous: 'Back', next: 'Next', finish: 'Done',
     steps: [
       {title: 'People', body: 'When a face appears, its number becomes available. Choose the person whose outfit you want to change.'},
-      {title: 'Outfits', body: 'Dress the selected person in men’s or women’s Ryūsō, or show a Yanbaru rail. Choose “None” to remove it.'},
-      {title: 'Background', body: 'Choose a beach, stone path, or Shuri Castle scene. Choose “None” to return to the camera view.'},
+      {title: 'Outfits', body: 'Dress the selected person in {man}, {woman}, or {bird}. Choose “None” to remove it.'},
+      {title: 'Background', body: 'Choose {beach}, {stone}, or {castleBefore}. Choose “None” to return to the camera view.'},
       {title: 'Explore details', body: 'Choose Ryūsō and turn this on. Point at the forehead, wrist or sleeve, or waist for about one second, or tap the screen, to read about that part.'},
       {title: 'Take a photo', body: 'Save a PNG combining the camera, outfit, and background. Controls and fingertip markers stay out of the photo.'},
       {title: 'Person settings', body: 'If person numbers change unexpectedly, renumber everyone from left to right here.'},
-      {title: 'Exhibit information', body: 'Read about the outfits or Yanbaru rail. You can adjust the text size in the information panel.'},
+      {title: 'Exhibit information', body: 'Read about the outfits or {bird}. You can adjust the text size in the information panel.'},
       {title: 'Exit', body: 'Return to the first screen and stop the camera.'}
     ]
   })
@@ -39,6 +39,18 @@ const steps = [
   {target: documentRef => documentRef.getElementById('infoBtn')},
   {target: documentRef => documentRef.getElementById('backBtn')}
 ];
+
+function configuredBody(template) {
+  const names = {
+    man: t('outfitMan'),
+    woman: t('outfitWoman'),
+    bird: t('birdFull'),
+    beach: t('beach'),
+    stone: t('stone'),
+    castleBefore: t('castleBefore')
+  };
+  return template.replace(/\{(\w+)\}/g, (_, key) => names[key] ?? key);
+}
 
 export function initHintTour(documentRef = document, windowRef = window) {
   const button = documentRef.getElementById('hintBtn');
@@ -80,7 +92,7 @@ export function initHintTour(documentRef = document, windowRef = window) {
     const language = copy[getLanguage()] || copy.ja;
     const content = language.steps[index];
     title.textContent = content.title;
-    body.textContent = content.body;
+    body.textContent = configuredBody(content.body);
     progress.textContent = `${index + 1} / ${steps.length}`;
     previous.hidden = index === 0;
     previous.textContent = language.previous;

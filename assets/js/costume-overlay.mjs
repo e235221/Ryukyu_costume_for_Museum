@@ -1,10 +1,7 @@
-import {CostumeDetailExplorer} from './costume-details.mjs?v=20260922-3';
-import {t} from './language.mjs?v=20260922-2';
+import {CostumeDetailExplorer} from './costume-details.mjs?v=20260922-4';
+import {t} from './language.mjs?v=20260922-3';
+import {exhibitSettings} from '../../exhibit-settings.mjs';
 
-const COSTUME_HOLES = Object.freeze({
-  man: {x: 338.5, y: 228.5, width: 65, height: 79},
-  woman: {x: 344, y: 277, width: 62, height: 76}
-});
 const isRyuso = kind => kind === 'man' || kind === 'woman';
 
 function createProjector(video, width, height) {
@@ -28,7 +25,7 @@ function placementFor(slot, kind, project) {
   const secondEye = project(face.eyes[1]);
   const angle = Math.atan2(secondEye.y - firstEye.y, secondEye.x - firstEye.x);
   if (!isRyuso(kind)) return {personId: slot.id, kind, center, top, bottom, left, right, angle};
-  const hole = COSTUME_HOLES[kind];
+  const hole = exhibitSettings.alignment[kind].faceHole;
   const factor = Math.max(
     Math.hypot(left.x - right.x, left.y - right.y) / hole.width,
     Math.hypot(top.x - bottom.x, top.y - bottom.y) / hole.height
@@ -38,18 +35,20 @@ function placementFor(slot, kind, project) {
 
 function drawCostume(context, placement, images) {
   if (placement.kind === 'bird') {
+    const {size, headBounds, headScale} = exhibitSettings.alignment.bird;
     const factor = Math.max(
-      Math.hypot(placement.left.x - placement.right.x, placement.left.y - placement.right.y) * 1.35 / 1136,
-      Math.hypot(placement.top.x - placement.bottom.x, placement.top.y - placement.bottom.y) * 1.25 / 1049
+      Math.hypot(placement.left.x - placement.right.x, placement.left.y - placement.right.y) * headScale.width / headBounds.width,
+      Math.hypot(placement.top.x - placement.bottom.x, placement.top.y - placement.bottom.y) * headScale.height / headBounds.height
     );
     context.save();
     context.translate(placement.center.x, placement.center.y);
     context.rotate(placement.angle);
-    context.drawImage(images.bird, -626 * factor, -623.5 * factor, 1254 * factor, 1254 * factor);
+    context.drawImage(images.bird, -(headBounds.x + headBounds.width / 2) * factor, -(headBounds.y + headBounds.height / 2) * factor, size.width * factor, size.height * factor);
     context.restore();
     return;
   }
   if (!isRyuso(placement.kind)) return;
+  const size = exhibitSettings.alignment[placement.kind].size;
   context.save();
   context.translate(placement.center.x, placement.center.y);
   context.rotate(placement.angle);
@@ -57,8 +56,8 @@ function drawCostume(context, placement, images) {
     images[placement.kind],
     -placement.hole.x * placement.factor,
     -placement.hole.y * placement.factor,
-    683 * placement.factor,
-    1024 * placement.factor
+    size.width * placement.factor,
+    size.height * placement.factor
   );
   context.restore();
 }

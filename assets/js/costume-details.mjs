@@ -1,28 +1,7 @@
-import {t} from './language.mjs?v=20260922-2';
+import {t} from './language.mjs?v=20260922-3';
+import {exhibitSettings} from '../../exhibit-settings.mjs';
 
 const REGION_LABEL_KEYS = Object.freeze({sleeve: 'regionSleeve', waist: 'regionWaist', head: 'regionHead', hair: 'regionHair'});
-
-// Regions use the 683 x 1024 drawing coordinate system shared by both costumes.
-const COSTUME_REGIONS = Object.freeze({
-  man: Object.freeze([
-    {id: 'head', boxes: [{x: 270, y: 105, width: 145, height: 145}]},
-    {id: 'sleeve', boxes: [
-      {x: 120, y: 275, width: 190, height: 170},
-      {x: 375, y: 275, width: 190, height: 170},
-      {x: 120, y: 445, width: 165, height: 115},
-      {x: 390, y: 445, width: 175, height: 115}
-    ]},
-    {id: 'waist', boxes: [{x: 220, y: 445, width: 255, height: 180}]}
-  ]),
-  woman: Object.freeze([
-    {id: 'hair', boxes: [{x: 275, y: 130, width: 155, height: 150}]},
-    {id: 'waist', boxes: [{x: 245, y: 505, width: 195, height: 155}]},
-    {id: 'sleeve', boxes: [
-      {x: 105, y: 335, width: 205, height: 285},
-      {x: 375, y: 335, width: 205, height: 285}
-    ]}
-  ])
-});
 
 function pointInBox(point, box) {
   return point.x >= box.x && point.x <= box.x + box.width
@@ -43,7 +22,7 @@ function toCostumePoint(point, placement) {
 export function findCostumeDetail(point, placements) {
   for (let index = placements.length - 1; index >= 0; index -= 1) {
     const placement = placements[index];
-    const regions = COSTUME_REGIONS[placement.kind];
+    const regions = exhibitSettings.alignment[placement.kind]?.regions;
     if (!regions) continue;
     const costumePoint = toCostumePoint(point, placement);
     const region = regions.find(candidate => candidate.boxes.some(box => pointInBox(costumePoint, box)));
