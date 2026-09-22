@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import {FaceSlots} from '../assets/js/face-slots.mjs';
 import {AssignmentController} from '../assets/js/assignment-controller.mjs';
+import {setLanguage} from '../assets/js/language.mjs?v=20260922-2';
 
 class Element {
   constructor(dataset = {}) {
@@ -105,6 +106,11 @@ people[1].click();
 assert.equal(controller.snapshot().selectedPerson, 0);
 assert.equal(controller.focus(1), false);
 assert.equal(controller.focus(0), true);
+setLanguage('en', null);
+assert.equal(people[0].attributes['aria-label'], 'Person 1');
+assert.equal(outfitChoice.textContent, ': Women’s Ryūsō');
+assert.equal(detailModeLabel.textContent, 'Explore details');
+setLanguage('ja', null);
 assert(changes.includes('detail') && changes.includes('costume') && changes.includes('reset'));
 
 console.log('PASS: detected-only selection, independent assignments, explicit detail mode and hand-state guidance.');

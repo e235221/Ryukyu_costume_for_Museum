@@ -4,36 +4,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
   <title>琉球衣装AR体験</title>
-  <link rel="stylesheet" href="assets/css/app.css?v=20260922-3">
+  <link rel="stylesheet" href="assets/css/app.css?v=20260922-5">
 </head>
 <body>
   <main id="landing">
-    <h1>琉球衣装AR体験</h1>
-    <p class="subtitle">Ryukyu Costume AR Experience</p>
+    <h1 data-i18n="appTitle">琉球衣装AR体験</h1>
+    <p class="subtitle" data-i18n="subtitle">Ryukyu Costume AR Experience</p>
     <p class="landing-desc">
-      琉球王国時代の衣装をARで体験できるアプリである。
-      カメラに顔を映すと、男性・女性の琉球衣装を着た姿を楽しめる。
-      衣装の生地や時代背景の解説も確認できる。
+      <span data-i18n="landingLine1">琉球王国時代の衣装をARで体験できるアプリです。</span>
+      <span data-i18n="landingLine2">カメラに顔を映すと、琉装やヤンバルクイナの姿を楽しめます。</span>
+      <span data-i18n="landingLine3">衣装や沖縄の自然についての解説も確認できます。</span>
     </p>
+    <div class="language-picker" role="group" aria-label="表示言語" data-i18n-aria-label="chooseLanguage">
+      <span class="language-picker-label" data-i18n="chooseLanguage">表示言語</span>
+      <button type="button" data-language="ja" lang="ja" aria-pressed="true">日本語</button>
+      <button type="button" data-language="en" lang="en" aria-pressed="false">English</button>
+    </div>
     <button class="start-btn" id="startBtn" type="button">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/>
         <circle cx="12" cy="13" r="4"/>
       </svg>
-      AR体験を始める
+      <span data-i18n="start">AR体験を始める</span>
     </button>
     <p class="notice">
-      ※ カメラへのアクセス許可が必要である。<br>
-      ※ スマートフォンの縦向きでの利用を推奨する。
+      <span data-i18n="cameraNote">※ カメラへのアクセス許可が必要です。</span><br>
+      <span data-i18n="portraitNote">※ スマートフォンでは縦向きを推奨します。</span>
     </p>
   </main>
 
-  <section id="ar-container" aria-label="AR体験画面">
+  <section id="ar-container" aria-label="AR体験画面" data-i18n-aria-label="arArea">
     <canvas id="backgroundCanvas" hidden></canvas>
 
     <div class="loading-overlay" id="loadingOverlay">
       <div class="loading-spinner" aria-hidden="true"></div>
-      <p class="loading-text">カメラを起動中...</p>
+      <p class="loading-text" data-i18n="loading">カメラを起動中...</p>
     </div>
 
     <p id="arStatus" role="status" aria-live="polite"></p>
@@ -46,51 +51,57 @@
     </div>
     <canvas id="costumeCanvas"></canvas>
 
-    <button class="back-btn" id="backBtn" type="button" aria-label="AR体験を終了">←</button>
-    <button class="info-btn" id="infoBtn" type="button" aria-label="解説を表示"><span class="info-mark" aria-hidden="true">i</span><span class="info-text" aria-hidden="true">解説</span></button>
-    <div class="costume-bar" aria-label="人物ごとの衣装">
+    <button class="back-btn" id="backBtn" type="button" aria-label="AR体験を終了" data-i18n-aria-label="back">←</button>
+    <button class="hint-btn" id="hintBtn" type="button" aria-label="操作のヒントを表示" aria-controls="hintBubble" aria-expanded="false"><span class="hint-mark" aria-hidden="true">?</span><span class="hint-text" aria-hidden="true">ヒント</span></button>
+    <button class="info-btn" id="infoBtn" type="button" aria-label="解説を表示" data-i18n-aria-label="info"><span class="info-mark" aria-hidden="true">i</span><span class="info-text" aria-hidden="true" data-i18n="infoShort">解説</span></button>
+    <div class="hint-bubble" id="hintBubble" role="dialog" aria-modal="false" aria-labelledby="hintTitle" aria-describedby="hintBody" hidden>
+      <div class="hint-bubble-heading"><strong id="hintTitle"></strong><button type="button" id="hintClose" class="hint-close" aria-label="ヒントを閉じる">×</button></div>
+      <p id="hintBody"></p>
+      <div class="hint-bubble-footer"><span id="hintProgress"></span><div class="hint-actions"><button type="button" id="hintPrev">戻る</button><button type="button" id="hintNext">次へ</button></div></div>
+    </div>
+    <div class="costume-bar" aria-label="人物ごとの衣装" data-i18n-aria-label="dock">
       <div class="dock-section person-section">
-        <div class="dock-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="6" r="3"/><path d="M5 21v-3a7 7 0 0 1 14 0v3z"/></svg><span>人物</span></div>
-        <div class="person-picker" role="group" aria-label="衣装を変更する人物">
+        <div class="dock-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="6" r="3"/><path d="M5 21v-3a7 7 0 0 1 14 0v3z"/></svg><span data-i18n="people">人物</span></div>
+        <div class="person-picker" role="group" aria-label="衣装を変更する人物" data-i18n-aria-label="personGroup">
           <button type="button" data-person="0" aria-pressed="true" aria-label="人物1">1</button>
           <button type="button" data-person="1" aria-pressed="false" aria-label="人物2">2</button>
           <button type="button" data-person="2" aria-pressed="false" aria-label="人物3">3</button>
         </div>
       </div>
       <div class="dock-section outfit-section">
-        <div class="dock-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 3 4 2 4-2 5 4-2 5-3-1v10H8V11l-3 1-2-5z"/></svg><span>衣装</span></div>
+        <div class="dock-heading"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m8 3 4 2 4-2 5 4-2 5-3-1v10H8V11l-3 1-2-5z"/></svg><span data-i18n="outfit">衣装</span></div>
         <details class="outfit-picker" open>
-          <summary id="outfitSummary" aria-label="人物1の衣装：男性の琉装">衣装<span id="outfitChoice">：男性の琉装</span></summary>
-          <div class="outfit-options" role="group" aria-label="選択した人物の衣装・顔。横にスクロールできます">
-            <button type="button" data-costume="man" aria-pressed="true" aria-label="男性の琉装">男性の琉装</button>
-            <button type="button" data-costume="woman" aria-pressed="false" aria-label="女性の琉装">女性の琉装</button>
-            <button type="button" data-costume="bird" aria-pressed="false" aria-label="ヤンバルクイナ">クイナ</button>
-            <button type="button" data-costume="none" aria-pressed="false">なし</button>
+          <summary id="outfitSummary" aria-label="人物1の衣装：男性の琉装"><span data-i18n="outfit">衣装</span><span id="outfitChoice">：男性の琉装</span></summary>
+          <div class="outfit-options" role="group" aria-label="選択した人物の衣装・顔。横にスクロールできます" data-i18n-aria-label="outfitGroup">
+            <button type="button" data-costume="man" aria-pressed="true" aria-label="男性の琉装" data-i18n="outfitMan" data-i18n-aria-label="outfitMan">男性の琉装</button>
+            <button type="button" data-costume="woman" aria-pressed="false" aria-label="女性の琉装" data-i18n="outfitWoman" data-i18n-aria-label="outfitWoman">女性の琉装</button>
+            <button type="button" data-costume="bird" aria-pressed="false" aria-label="ヤンバルクイナ" data-i18n="birdShort" data-i18n-aria-label="birdFull">クイナ</button>
+            <button type="button" data-costume="none" aria-pressed="false" data-i18n="none">なし</button>
           </div>
         </details>
       </div>
       <div class="dock-section tools-section">
         <details class="background-picker">
-          <summary id="backgroundSummary" aria-label="背景：なし"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="18" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m4 18 6-6 4 4 3-3 4 4"/></svg><span class="desktop-label">背景変更</span><span class="compact-label">背景</span><span id="backgroundChoice">：なし</span></summary>
-          <div class="background-options" role="group" aria-label="背景の選択">
+          <summary id="backgroundSummary" aria-label="背景：なし"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="3" width="20" height="18" rx="2"/><circle cx="8" cy="9" r="1.5"/><path d="m4 18 6-6 4 4 3-3 4 4"/></svg><span class="desktop-label" data-i18n="backgroundChange">背景変更</span><span class="compact-label" data-i18n="background">背景</span><span id="backgroundChoice">：なし</span></summary>
+          <div class="background-options" role="group" aria-label="背景の選択" data-i18n-aria-label="backgroundGroup">
             <div class="background-row">
-              <button type="button" data-background="none" aria-pressed="true">なし</button>
-              <button type="button" data-background="beach" aria-pressed="false">海</button>
-              <button type="button" data-background="stone" aria-pressed="false">石畳</button>
+              <button type="button" data-background="none" aria-pressed="true" data-i18n="none">なし</button>
+              <button type="button" data-background="beach" aria-pressed="false" data-i18n="beach">海</button>
+              <button type="button" data-background="stone" aria-pressed="false" data-i18n="stone">石畳</button>
             </div>
             <div class="background-row">
-              <button type="button" data-background="castle-before" aria-pressed="false">首里城（復元前）</button>
-              <button type="button" data-background="castle-after" aria-pressed="false">首里城（復元後）</button>
+              <button type="button" data-background="castle-before" aria-pressed="false" data-i18n="castleBefore">首里城（復元前）</button>
+              <button type="button" data-background="castle-after" aria-pressed="false" data-i18n="castleAfter">首里城（復元後）</button>
             </div>
           </div>
         </details>
         <button type="button" id="detailModeBtn" aria-pressed="false" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c-2-2-6-2-9-1v15c3-1 7-1 9 1 2-2 6-2 9-1V4c-3-1-7-1-9 1z"/><path d="M12 5v15"/></svg><span id="detailModeLabel">部位解説</span></button>
       </div>
-      <div class="capture-section"><button class="photo-btn" id="photoBtn" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v13H3z"/><circle cx="12" cy="13" r="4"/></svg><span>撮影</span></button></div>
+      <div class="capture-section"><button class="photo-btn" id="photoBtn" type="button" disabled><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h4l2-3h6l2 3h4v13H3z"/><circle cx="12" cy="13" r="4"/></svg><span data-i18n="capture">撮影</span></button></div>
       <details class="person-settings">
-        <summary aria-label="人物設定"><span aria-hidden="true">⚙</span><span>設定</span></summary>
+        <summary aria-label="人物設定" data-i18n-aria-label="personSettings"><span aria-hidden="true">⚙</span><span data-i18n="settings">設定</span></summary>
         <div class="person-settings-panel">
-          <button type="button" id="resetPeople">番号を左から振り直す</button>
+          <button type="button" id="resetPeople" data-i18n="resetPeople">番号を左から振り直す</button>
         </div>
       </details>
       <span id="assignmentLabel" class="sr-only">人物1 の衣装・顔</span>
@@ -99,21 +110,22 @@
     </div>
   </section>
 
-  <aside class="desc-overlay" id="descPanel" aria-label="展示解説">
+  <aside class="desc-overlay" id="descPanel" aria-label="展示解説" data-i18n-aria-label="descriptionPanel">
     <div class="desc-header">
-      <h2 id="descTitle">衣装解説</h2>
-      <button class="close-btn" id="closeDesc" type="button" aria-label="解説を閉じる">✕</button>
+      <h2 id="descTitle" data-i18n="captionTitle">衣装解説</h2>
+      <button class="close-btn" id="closeDesc" type="button" aria-label="解説を閉じる" data-i18n-aria-label="closeDescription">✕</button>
     </div>
     <div class="caption-toolbar">
-      <label for="captionFontSize">文字サイズ</label>
-      <input id="captionFontSize" type="range" min="80" max="160" step="10" value="100" aria-label="キャプションの文字サイズ">
+      <label for="captionFontSize" data-i18n="fontSize">文字サイズ</label>
+      <input id="captionFontSize" type="range" min="80" max="160" step="10" value="100" aria-label="キャプションの文字サイズ" data-i18n-aria-label="fontSizeInput">
       <output id="captionFontSizeValue" for="captionFontSize">100%</output>
     </div>
     <div class="desc-body" id="descBody"></div>
   </aside>
 
-  <script src="assets/js/background.js?v=20260922-1"></script>
-  <script type="module" src="assets/js/caption-panel.mjs?v=20260921-2"></script>
-  <script type="module" src="assets/js/multiface.mjs?v=20260922-3"></script>
+  <script src="assets/js/background.js?v=20260922-2"></script>
+  <script type="module" src="assets/js/caption-panel.mjs?v=20260922-2"></script>
+  <script type="module" src="assets/js/multiface.mjs?v=20260922-6"></script>
+  <script type="module" src="assets/js/hint-tour.mjs?v=20260922-1"></script>
 </body>
 </html>

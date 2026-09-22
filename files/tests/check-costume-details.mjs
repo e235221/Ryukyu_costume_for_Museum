@@ -20,6 +20,8 @@ const man = placement('man');
 const woman = placement('woman', 1);
 
 assert.equal(findCostumeDetail(screenPoint({x: 180, y: 350}, man), [man]).region, 'sleeve');
+assert.equal(findCostumeDetail(screenPoint({x: 260, y: 510}, man), [man]).region, 'sleeve', 'left wrist must open the sleeve caption');
+assert.equal(findCostumeDetail(screenPoint({x: 400, y: 510}, man), [man]).region, 'sleeve', 'right wrist must open the sleeve caption');
 assert.equal(findCostumeDetail(screenPoint({x: 330, y: 520}, man), [man]).region, 'waist');
 assert.equal(findCostumeDetail(screenPoint({x: 340, y: 160}, man), [man]).region, 'head');
 assert.equal(findCostumeDetail(screenPoint({x: 180, y: 420}, woman), [woman]).region, 'sleeve');

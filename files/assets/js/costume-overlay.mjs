@@ -1,4 +1,5 @@
-import {CostumeDetailExplorer} from './costume-details.mjs?v=20260921-1';
+import {CostumeDetailExplorer} from './costume-details.mjs?v=20260922-3';
+import {t} from './language.mjs?v=20260922-2';
 
 const COSTUME_HOLES = Object.freeze({
   man: {x: 338.5, y: 228.5, width: 65, height: 79},
@@ -72,7 +73,7 @@ function drawLabel(context, slot, placement, selectedPerson, now) {
   context.font = 'bold 14px sans-serif';
   context.textAlign = 'center';
   context.fillStyle = 'white';
-  context.fillText(`人物${slot.id + 1}`, placement.center.x, placement.top.y - 16);
+  context.fillText(t('person', {number: slot.id + 1}), placement.center.x, placement.top.y - 16);
   context.restore();
 }
 

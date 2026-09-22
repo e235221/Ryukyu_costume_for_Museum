@@ -1,8 +1,9 @@
 import {FaceSlots, faceGeometry} from './face-slots.mjs';
-import {composePhoto, photoFilename} from './photo-capture.mjs';
-import {AssignmentController} from './assignment-controller.mjs?v=20260922-3';
-import {CostumeOverlay} from './costume-overlay.mjs?v=20260921-1';
+import {composePhoto, photoFilename} from './photo-capture.mjs?v=20260922-2';
+import {AssignmentController} from './assignment-controller.mjs?v=20260922-5';
+import {CostumeOverlay} from './costume-overlay.mjs?v=20260922-3';
 import {visionModels} from './vision-models.mjs?v=20260921-1';
+import {t} from './language.mjs?v=20260922-2';
 
 const FACE_INTERVAL_MS = 80;
 const HAND_INTERVAL_MS = 160;
@@ -120,20 +121,20 @@ function photoMessage(message) {
 
 function canvasBlob(target) {
   return new Promise((resolve, reject) => target.toBlob(
-    blob => blob ? resolve(blob) : reject(new Error('写真データを作成できません')),
+    blob => blob ? resolve(blob) : reject(new Error(t('photoBlobError'))),
     'image/png'
   ));
 }
 
 photoButton.addEventListener('click', async () => {
   if (!video || video.readyState < 2 || !faceModel) {
-    photoMessage('カメラと顔認識の準備が完了してから撮影してください');
+    photoMessage(t('photoCameraNotReady'));
     return;
   }
   const selectedBackground = document.querySelector('[data-background][aria-pressed="true"]')?.dataset.background;
   const backgroundCanvas = $('backgroundCanvas');
   if (selectedBackground && selectedBackground !== 'none' && backgroundCanvas.hidden) {
-    photoMessage('背景の準備が完了してから撮影してください');
+    photoMessage(t('photoBackgroundNotReady'));
     return;
   }
   photoButton.disabled = true;
@@ -160,10 +161,10 @@ photoButton.addEventListener('click', async () => {
     link.click();
     link.remove();
     setTimeout(() => URL.revokeObjectURL(url), 1000);
-    photoMessage('写真を保存しました');
+    photoMessage(t('photoSaved'));
   } catch (error) {
     console.error('Photo capture:', error);
-    photoMessage(`写真を保存できません：${error.message}`);
+    photoMessage(t('photoSaveError', {reason: error.message}));
   } finally {
     photoButton.disabled = !(video && faceModel);
   }
@@ -192,7 +193,7 @@ function stop() {
 function fail(error) {
   stop();
   loading.classList.add('hidden');
-  status.textContent = `起動できません：${error.message}。左上の矢印で戻って再試行してください。`;
+  status.textContent = t('startError', {reason: error.message});
   console.error(error);
 }
 
@@ -224,7 +225,7 @@ function frame(now, token) {
       assignments.refresh();
       draw(now);
       const count = tracks.filter(slot => slot.visible).length;
-      status.textContent = count ? `${count}人を認識中（最大3人）` : '顔をカメラに向けてください';
+      status.textContent = count ? t('trackingCount', {count}) : t('facePrompt');
     }
     animationFrame = requestAnimationFrame(time => frame(time, token));
   } catch (error) {
@@ -241,12 +242,12 @@ startButton.addEventListener('click', async () => {
   loading.classList.remove('hidden');
   status.textContent = '';
   const timeout = setTimeout(() => {
-    if (token === epoch) fail(new Error('準備がタイムアウトしました'));
+    if (token === epoch) fail(new Error(t('startTimeout')));
   }, 60000);
 
   try {
-    if (location.protocol === 'file:') throw new Error('ARを起動.commandからlocalhostで開いてください');
-    if (!navigator.mediaDevices?.getUserMedia) throw new Error('localhostまたはHTTPSが必要です');
+    if (location.protocol === 'file:') throw new Error(t('fileProtocolError'));
+    if (!navigator.mediaDevices?.getUserMedia) throw new Error(t('secureContextError'));
     await Promise.all(Object.values(costumeImages).map(image => image.decode()));
     if (token !== epoch) return;
     const acquired = await navigator.mediaDevices.getUserMedia({
@@ -268,7 +269,7 @@ startButton.addEventListener('click', async () => {
     await video.play();
     if (token !== epoch) return;
     loading.classList.add('hidden');
-    status.textContent = '複数人の顔認識を準備中...';
+    status.textContent = t('facePreparing');
     faceModel = await visionModels.face();
     if (token !== epoch) return;
     photoButton.disabled = false;

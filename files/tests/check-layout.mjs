@@ -8,6 +8,7 @@ const barStart = html.indexOf('<div class="costume-bar"');
 const barEnd = html.indexOf('</section>', barStart);
 assert(barStart > 0 && barEnd > barStart, '操作ドックがAR画面内にある');
 const bar = html.slice(barStart, barEnd);
+assert.match(html.slice(0, barStart), /class="language-picker"[\s\S]*data-language="ja"[\s\S]*data-language="en"/);
 
 for (const id of ['resetPeople', 'photoBtn', 'detailModeBtn', 'backgroundSummary', 'outfitSummary']) {
   assert.equal((html.match(new RegExp(`id="${id}"`, 'g')) || []).length, 1, `${id}は1個だけ`);

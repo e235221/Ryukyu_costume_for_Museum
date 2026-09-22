@@ -1,19 +1,18 @@
-const REGION_LABELS = Object.freeze({
-  sleeve: '袖',
-  waist: '腰',
-  head: '頭',
-  hair: '髪'
-});
+import {t} from './language.mjs?v=20260922-2';
+
+const REGION_LABEL_KEYS = Object.freeze({sleeve: 'regionSleeve', waist: 'regionWaist', head: 'regionHead', hair: 'regionHair'});
 
 // Regions use the 683 x 1024 drawing coordinate system shared by both costumes.
 const COSTUME_REGIONS = Object.freeze({
   man: Object.freeze([
     {id: 'head', boxes: [{x: 270, y: 105, width: 145, height: 145}]},
-    {id: 'waist', boxes: [{x: 220, y: 445, width: 255, height: 180}]},
     {id: 'sleeve', boxes: [
-      {x: 120, y: 275, width: 190, height: 285},
-      {x: 375, y: 275, width: 190, height: 285}
-    ]}
+      {x: 120, y: 275, width: 190, height: 170},
+      {x: 375, y: 275, width: 190, height: 170},
+      {x: 120, y: 445, width: 165, height: 115},
+      {x: 390, y: 445, width: 175, height: 115}
+    ]},
+    {id: 'waist', boxes: [{x: 220, y: 445, width: 255, height: 180}]}
   ]),
   woman: Object.freeze([
     {id: 'hair', boxes: [{x: 275, y: 130, width: 155, height: 150}]},
@@ -53,7 +52,7 @@ export function findCostumeDetail(point, placements) {
         personId: placement.personId,
         costume: placement.kind,
         region: region.id,
-        label: REGION_LABELS[region.id]
+        label: t(REGION_LABEL_KEYS[region.id])
       };
     }
   }

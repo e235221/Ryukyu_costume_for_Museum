@@ -1,8 +1,10 @@
+import {t} from './language.mjs?v=20260922-2';
+
 export function drawCover(context, image, width, height, mirror = false) {
   const sourceWidth = image.videoWidth || image.naturalWidth || image.width;
   const sourceHeight = image.videoHeight || image.naturalHeight || image.height;
   if (!sourceWidth || !sourceHeight || !width || !height) {
-    throw new Error('撮影する映像のサイズを取得できません');
+    throw new Error(t('photoVideoSizeError'));
   }
   const scale = Math.max(width / sourceWidth, height / sourceHeight);
   const drawWidth = sourceWidth * scale;
@@ -23,7 +25,7 @@ export function drawCover(context, image, width, height, mirror = false) {
 }
 
 export function composePhoto(output, {video, backgroundCanvas, costumeCanvas, width, height}) {
-  if (!video || video.readyState < 2) throw new Error('カメラ映像の準備ができていません');
+  if (!video || video.readyState < 2) throw new Error(t('photoVideoNotReady'));
   output.width = width;
   output.height = height;
   const context = output.getContext('2d');

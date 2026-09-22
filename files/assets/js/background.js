@@ -8,6 +8,7 @@
     'castle-after': 'assets/images/backgrounds/shurijo-after.jpg'
   };
   let video, model, modelPromise, selected = 'none', background, timer, busy = false, generation = 0, job;
+  let messageKey = null, messageFallback = '';
   const canvas = document.getElementById('backgroundCanvas');
   const context = canvas.getContext('2d');
   const message = document.getElementById('backgroundStatus');
@@ -15,6 +16,17 @@
   const choice = document.getElementById('backgroundChoice');
   const buttons = [...document.querySelectorAll('[data-background]')];
   const labels = {none: 'なし', beach: '海', stone: '石畳', 'castle-before': '首里城（復元前）', 'castle-after': '首里城（復元後）'};
+  const labelKeys = {none: 'none', beach: 'beach', stone: 'stone', 'castle-before': 'castleBefore', 'castle-after': 'castleAfter'};
+  const translate = (key, fallback, values) => window.appLanguage?.t(key, values) ?? fallback;
+  function updateSummary() {
+    const current = translate(labelKeys[selected], labels[selected]);
+    summary.setAttribute('aria-label', translate('backgroundSummary', `背景：${current}`, {background: current}));
+    choice.textContent = translate('backgroundChoice', `：${current}`, {background: current});
+  }
+  function setMessage(key, fallback = '') {
+    messageKey = key; messageFallback = fallback;
+    message.textContent = key ? translate(key, fallback) : '';
+  }
   function cover(ctx, image, width, height) {
     const iw = image.videoWidth || image.naturalWidth || image.width;
     const ih = image.videoHeight || image.naturalHeight || image.height;
@@ -26,8 +38,8 @@
     if (!modelPromise) modelPromise = new Promise((resolve, reject) => {
       const script = document.createElement('script');
       script.src = CDN + 'selfie_segmentation.js';
-      const timeout = setTimeout(() => reject(new Error('背景処理の読込がタイムアウトしました')), 30000);
-      script.onerror = () => { clearTimeout(timeout); reject(new Error('背景処理を読み込めません')); };
+      const timeout = setTimeout(() => reject(new Error(translate('backgroundLoadTimeout', '背景処理の読込がタイムアウトしました'))), 30000);
+      script.onerror = () => { clearTimeout(timeout); reject(new Error(translate('backgroundScriptError', '背景処理を読み込めません'))); };
       script.onload = () => {
         clearTimeout(timeout);
         try {
@@ -51,7 +63,7 @@
             cover(context, background, w, h);
             context.restore();
             canvas.hidden = false;
-            message.textContent = '';
+            setMessage(null);
           });
           resolve(model);
         } catch (error) {reject(error);}
@@ -73,7 +85,7 @@
       catch (error) {
         if (token === generation) {
           clearInterval(timer); hide();
-          message.textContent = '背景処理に失敗しました。「なし」で通常のカメラに戻せます。';
+          setMessage('backgroundProcessingError', '背景処理に失敗しました。「なし」で通常のカメラに戻せます。');
           console.error('Background:', error);
         }
       } finally {busy = false;}
@@ -83,9 +95,8 @@
     const token = ++generation;
     selected = name; clearInterval(timer); hide();
     buttons.forEach(button => button.setAttribute('aria-pressed', String(button.dataset.background === name)));
-    summary.setAttribute('aria-label', `背景：${labels[name] || 'なし'}`);
-    choice.textContent = `：${labels[name] || 'なし'}`;
-    message.textContent = name === 'none' ? '' : '背景を準備中...';
+    updateSummary();
+    setMessage(name === 'none' ? null : 'backgroundPreparing', '背景を準備中...');
     if (name === 'none') return;
     try {
       const image = new Image(); image.src = images[name];
@@ -93,13 +104,14 @@
       if (token !== generation) return;
       background = image; run();
     } catch (error) {
-      if (token === generation) message.textContent = '背景を読み込めません。「なし」に戻すか、もう一度選んでください。';
+      if (token === generation) setMessage('backgroundError', '背景を読み込めません。「なし」に戻すか、もう一度選んでください。');
       console.error('Background:', error);
     }
   }
   buttons.forEach(button => button.addEventListener('click', () => select(button.dataset.background)));
   window.costumeBackground = {
     start(input) {video = input; if (selected !== 'none') select(selected);},
-    stop() {generation++; video = null; clearInterval(timer); hide(); message.textContent = '';}
+    stop() {generation++; video = null; clearInterval(timer); hide(); setMessage(null);},
+    refreshLanguage() {updateSummary(); if (messageKey) setMessage(messageKey, messageFallback);}
   };
 })();

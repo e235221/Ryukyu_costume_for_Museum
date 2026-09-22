@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import {CostumeOverlay} from '../assets/js/costume-overlay.mjs';
+import {initCaptionPanel} from '../assets/js/caption-panel.mjs';
 
 const operations = [];
 const context = {
@@ -39,4 +40,64 @@ assert.equal(rendered.placements[0].kind, 'man');
 assert.equal(operations.find(operation => operation[0] === 'draw')[1], images.man);
 assert.equal(operations.filter(operation => operation[0] === 'save').length, operations.filter(operation => operation[0] === 'restore').length);
 
-console.log('PASS: bird/Ryuso rendering, placement output, rotation and balanced canvas state.');
+const nodes = new Map();
+const node = id => {
+  if (!nodes.has(id)) nodes.set(id, {
+    textContent: '', innerHTML: '', value: id === 'captionFontSize' ? '100' : '',
+    style: {}, events: {}, classList: {
+      open: false,
+      add() {this.open = true;},
+      remove() {this.open = false;},
+      contains() {return this.open;}
+    },
+    addEventListener(type, listener) {this.events[type] = listener;}
+  });
+  return nodes.get(id);
+};
+const windowRef = {};
+initCaptionPanel({getElementById: node}, windowRef);
+const interactiveOverlay = new CostumeOverlay({
+  canvas, container, images,
+  descriptionOpen: () => windowRef.isCostumeDescriptionOpen(),
+  onDetail: hit => windowRef.showCostumeDetail(hit.costume, hit.region)
+});
+
+function screenPoint(imagePoint, placement) {
+  const dx = (imagePoint.x - placement.hole.x) * placement.factor;
+  const dy = (imagePoint.y - placement.hole.y) * placement.factor;
+  return {
+    x: placement.center.x + Math.cos(placement.angle) * dx - Math.sin(placement.angle) * dy,
+    y: placement.center.y + Math.sin(placement.angle) * dx + Math.cos(placement.angle) * dy
+  };
+}
+
+const cases = [
+  {kind: 'man', imagePoint: {x: 340, y: 160}, title: '男性の琉装：頭'},
+  {kind: 'man', imagePoint: {x: 260, y: 510}, title: '男性の琉装：袖'},
+  {kind: 'man', imagePoint: {x: 330, y: 520}, title: '男性の琉装：腰'},
+  {kind: 'woman', imagePoint: {x: 340, y: 190}, title: '女性の琉装：髪'},
+  {kind: 'woman', imagePoint: {x: 180, y: 420}, title: '女性の琉装：袖'},
+  {kind: 'woman', imagePoint: {x: 330, y: 570}, title: '女性の琉装：腰'}
+];
+
+for (const [index, item] of cases.entries()) {
+  const scene = {video, slots: {slots: [slot]}, outfits: [item.kind], selectedPerson: 0, detailMode: true};
+  const now = index * 3000 + 1000;
+  const {placements} = interactiveOverlay.render(scene, {includeLabels: false, now});
+  const point = screenPoint(item.imagePoint, placements[0]);
+  const hit = interactiveOverlay.activateClientPoint(point.x, point.y, now);
+  assert(hit, `${item.title}: screen touch must hit the costume`);
+  assert.equal(node('descTitle').textContent, item.title);
+  assert.equal(node('descPanel').classList.contains('open'), true);
+  node('closeDesc').events.click();
+  assert.equal(windowRef.isCostumeDescriptionOpen(), false);
+
+  interactiveOverlay.render({...scene, handPointers: [{x: point.x / 1280, y: point.y / 720}]}, {includeLabels: false, now: now + 1300});
+  assert.equal(windowRef.isCostumeDescriptionOpen(), false, `${item.title}: finger dwell must not open immediately`);
+  interactiveOverlay.render({...scene, handPointers: [{x: point.x / 1280, y: point.y / 720}]}, {includeLabels: false, now: now + 2200});
+  assert.equal(node('descTitle').textContent, item.title);
+  assert.equal(windowRef.isCostumeDescriptionOpen(), true, `${item.title}: finger dwell must open the caption`);
+  node('closeDesc').events.click();
+}
+
+console.log('PASS: rendering, placement, six region touches and fingertip dwell open the matching captions.');

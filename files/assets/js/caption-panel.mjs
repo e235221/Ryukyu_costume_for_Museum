@@ -1,3 +1,6 @@
+import {captionDataEn, detailCaptionDataEn} from './caption-data-en.mjs?v=20260922-1';
+import {getLanguage, onLanguageChange} from './language.mjs?v=20260922-2';
+
 const ryusoMarkdown = `## 琉球の装い　琉装
 
 色あざやかな布，大きく開いた袖，ゆったりとした形。
@@ -177,7 +180,7 @@ function escapeHtml(value) {
 }
 
 function renderInlineMarkdown(value) {
-  const pattern = /\[([^\]]+)\]\((https:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*/g;
+  const pattern = /\[([^\]]+)\]\((https:\/\/[^\s)]+)\)|\*\*([^*]+)\*\*|\*([^*]+)\*/g;
   let html = '';
   let lastIndex = 0;
   let match;
@@ -185,7 +188,9 @@ function renderInlineMarkdown(value) {
     html += escapeHtml(value.slice(lastIndex, match.index));
     html += match[3]
       ? `<strong>${escapeHtml(match[3])}</strong>`
-      : `<a href="${escapeHtml(match[2])}" target="_blank" rel="noopener noreferrer">${escapeHtml(match[1])}</a>`;
+      : match[4]
+        ? `<em>${escapeHtml(match[4])}</em>`
+        : `<a href="${escapeHtml(match[2])}" target="_blank" rel="noopener noreferrer">${escapeHtml(match[1])}</a>`;
     lastIndex = pattern.lastIndex;
   }
   return html + escapeHtml(value.slice(lastIndex));
@@ -205,6 +210,7 @@ export function initCaptionPanel(documentRef = document, windowRef = window) {
   const fontSizeValue = documentRef.getElementById('captionFontSizeValue');
   const body = documentRef.getElementById('descBody');
   const panel = documentRef.getElementById('descPanel');
+  let currentSelection = null;
 
   const applyFontSize = value => {
     const percent = Math.min(160, Math.max(80, Number(value) || 100));
@@ -223,14 +229,28 @@ export function initCaptionPanel(documentRef = document, windowRef = window) {
     panel.classList.add('open');
   };
 
-  windowRef.showCostumeDescription = name => showCaption(captionData[name] || captionData.man);
+  const showSelection = () => {
+    const main = getLanguage() === 'en' ? captionDataEn : captionData;
+    const detail = getLanguage() === 'en' ? detailCaptionDataEn : detailCaptionData;
+    if (currentSelection.type === 'main') showCaption(main[currentSelection.name] || main.man);
+    else showCaption(detail[currentSelection.costume][currentSelection.region]);
+  };
+
+  windowRef.showCostumeDescription = name => {
+    currentSelection = {type: 'main', name};
+    showSelection();
+  };
   windowRef.showCostumeDetail = (costume, region) => {
     const data = detailCaptionData[costume]?.[region];
     if (!data) return false;
-    showCaption(data);
+    currentSelection = {type: 'detail', costume, region};
+    showSelection();
     return true;
   };
   windowRef.isCostumeDescriptionOpen = () => panel.classList.contains('open');
+  onLanguageChange(() => {
+    if (currentSelection && panel.classList.contains('open')) showSelection();
+  });
 
   return {
     show: windowRef.showCostumeDescription,

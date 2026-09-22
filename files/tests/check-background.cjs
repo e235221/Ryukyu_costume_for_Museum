@@ -27,6 +27,16 @@ const fs = require('node:fs'), vm = require('node:vm'), assert = require('node:a
   assert.equal(operations.at(-1).src,'assets/images/backgrounds/shurijo-after.jpg');
   await buttons[0].click(); assert.equal(canvas.hidden,true); assert.equal(interval,null);
   assert.equal(choice.textContent,'：なし');
+  api.window.appLanguage = {t(key, values) {
+    if (key === 'none') return 'None';
+    if (key === 'backgroundSummary') return `Background: ${values.background}`;
+    if (key === 'backgroundChoice') return `: ${values.background}`;
+    return key;
+  }};
+  api.window.costumeBackground.refreshLanguage();
+  assert.equal(summary.attributes['aria-label'],'Background: None');
+  assert.equal(choice.textContent,': None');
+  delete api.window.appLanguage;
   await buttons[1].click();await tick();
   api.window.costumeBackground.stop();
   resultCallback({segmentationMask:{},image:{}});

@@ -1,5 +1,7 @@
+import {onLanguageChange, t} from './language.mjs?v=20260922-2';
+
 const isRyuso = kind => kind === 'man' || kind === 'woman';
-const outfitNames = {man: '男性の琉装', woman: '女性の琉装', bird: 'ヤンバルクイナ', none: 'なし'};
+const outfitNameKeys = {man: 'outfitMan', woman: 'outfitWoman', bird: 'birdFull', none: 'none'};
 
 export class AssignmentController {
   constructor({
@@ -58,6 +60,7 @@ export class AssignmentController {
       this.refresh();
       this.onChange('detail');
     });
+    onLanguageChange(() => this.refresh());
     this.refresh();
   }
 
@@ -100,7 +103,7 @@ export class AssignmentController {
       button.setAttribute('aria-disabled', String(!visible));
       button.setAttribute('aria-pressed', String(visible && index === this.selectedPerson));
       button.textContent = String(index + 1);
-      button.setAttribute('aria-label', visible ? `人物${index + 1}` : `人物${index + 1}（未検出）`);
+      button.setAttribute('aria-label', t(visible ? 'person' : 'personUndetected', {number: index + 1}));
     });
     this.costumeButtons.forEach(button => {
       button.disabled = !hasSelectedPerson;
@@ -108,29 +111,29 @@ export class AssignmentController {
       button.setAttribute('aria-pressed', String(button.dataset.costume === this.outfits[this.selectedPerson]));
     });
     this.assignmentLabel.textContent = hasSelectedPerson
-      ? `人物${this.selectedPerson + 1} の衣装・顔`
-      : '人物を検出すると衣装を選べます';
-    const chosenOutfit = outfitNames[this.outfits[this.selectedPerson]];
-    this.outfitChoice.textContent = hasSelectedPerson ? `：${chosenOutfit}` : '';
+      ? t('assignmentFor', {number: this.selectedPerson + 1})
+      : t('noPerson');
+    const chosenOutfit = t(outfitNameKeys[this.outfits[this.selectedPerson]]);
+    this.outfitChoice.textContent = hasSelectedPerson ? t('outfitChoice', {outfit: chosenOutfit}) : '';
     this.outfitSummary.setAttribute('aria-label', hasSelectedPerson
-      ? `人物${this.selectedPerson + 1}の衣装：${chosenOutfit}`
-      : '衣装：人物未検出');
+      ? t('outfitFor', {number: this.selectedPerson + 1, outfit: chosenOutfit})
+      : t('noPersonOutfit'));
 
     const canInspect = hasSelectedPerson && isRyuso(this.outfits[this.selectedPerson]);
     if (!canInspect) this.detailMode = false;
     this.detailButton.disabled = !canInspect;
     this.detailButton.setAttribute('aria-disabled', String(!canInspect));
     this.detailButton.setAttribute('aria-pressed', String(this.detailMode));
-    this.detailModeLabel.textContent = '部位解説';
-    this.detailButton.setAttribute('aria-label', this.detailMode ? '部位解説：オン' : '部位解説：オフ');
+    this.detailModeLabel.textContent = t('detailMode');
+    this.detailButton.setAttribute('aria-label', t(this.detailMode ? 'detailOn' : 'detailOff'));
     this.detailHint.hidden = !this.detailMode;
     if (!this.detailMode) return;
     if (this.handState === 'unavailable') {
-      this.detailHint.textContent = '衣装の袖・腰・頭／髪を画面でタッチしてください';
+      this.detailHint.textContent = t('detailUnavailable');
     } else if (this.handState !== 'ready') {
-      this.detailHint.textContent = '手の認識を準備中です。衣装は画面タッチでも読めます';
+      this.detailHint.textContent = t('detailLoading');
     } else {
-      this.detailHint.textContent = '袖・腰・頭／髪を指先で約1秒示すか、画面をタッチしてください';
+      this.detailHint.textContent = t('detailReady');
     }
   }
 }
